@@ -2,43 +2,45 @@
 
 Projeto acadêmico de Design e Arquitetura de Software para propor uma solução de gerenciamento de monitorias acadêmicas. Este repositório será preenchido pelo grupo ao longo do trabalho; os itens abaixo são um rascunho inicial, não uma especificação final.
 
-## Premissas iniciais — validar
+## Premissas iniciais — propostas pelo grupo, ainda a validar
 
-- Aproximadamente 100 monitorias por semestre.
-- Estimativa inicial de 30 alunos por monitoria: até 3.000 alunos potencialmente envolvidos no semestre.
-- **Carga simultânea a esclarecer:** o cálculo acima não determina, por si só, 3.000 requisições simultâneas. Definir e justificar o cenário de carga antes de tratá-lo como requisito de desempenho.
-- Arquitetura inicialmente considerada: monólito único, organizado em camadas, com MVC na apresentação.
-- Backend inicialmente considerado: Java com Spring Boot.
-- Frontend: a definir; será separado do backend.
-- Interface visual: simples e alinhada à identidade visual da UFPR, sem priorizar sofisticação visual.
+- Volume estimado: aproximadamente **100 monitorias por semestre**.
+- Estimativa de ocupação: **30 alunos por monitoria/sala**, cerca de 3.000 participações no semestre. A transcrição também menciona “3.000 simultâneos”, mas isso precisa ser esclarecido: usuários simultâneos e requisições por segundo são métricas diferentes.
+- Meta de desempenho mencionada: até **50 requisições por segundo**. Confirmar se é requisito, pico esperado ou apenas estimativa, e definir como será verificada.
+- Arquitetura proposta: **um monólito**, organizado em camadas, com MVC na camada de apresentação e API REST.
+- Backend proposto: **Java com Spring Boot**.
+- Frontend separado do backend; tecnologia ainda não escolhida.
+- A interface deve seguir a identidade visual/design da UFPR; o grupo não busca uma interface visual sofisticada. Detalhar os critérios visuais depois.
+- A solução deve ser simples e rápida de implementar por uma equipe pequena, evitando complexidade sem justificativa.
+- Considerar integração futura com serviços externos, inclusive autenticação institucional, se necessário. A fala indica integrar com um serviço existente em vez de construir autenticação completa; confirmar o escopo com o grupo.
 
 ## Requisitos
 
-> Rascunho para discussão. Transformar os itens confirmados em requisitos verificáveis e priorizados.
+> Rascunho baseado nas instruções recebidas. Confirmar ambiguidades, priorizar e transformar os requisitos em critérios de aceitação verificáveis. A entrega pede entre 6 e 10 requisitos funcionais.
 
 ### Contexto e atores
 
-- **Contexto:** gerenciamento de monitorias acadêmicas — detalhar o problema e o escopo.
-- **Atores:** a definir (por exemplo, estudantes, monitores e docentes responsáveis; confirmar com o grupo).
+- **Contexto:** apoiar a organização e o acesso a monitorias acadêmicas, incluindo disciplinas como matemática, escrita e cálculo (exemplos citados no áudio; confirmar).
+- **Atores mencionados ou inferidos da conversa:** estudante, monitor e professor responsável. Validar os papéis e responsabilidades com o grupo.
 
-### Requisitos funcionais
+### Requisitos funcionais — rascunho
 
-Definir entre 6 e 10 requisitos funcionais, com critérios de aceitação. Possíveis temas levantados na conversa, ainda a validar:
-
-- [ ] Cadastro e consulta de monitorias.
-- [ ] Inscrição ou candidatura de estudantes.
-- [ ] Seleção e validação de monitores pelo responsável definido pelo grupo.
-- [ ] Registro e consulta de horários/disponibilidade das monitorias.
-- [ ] Acesso dos estudantes às informações ou atividades da monitoria.
-- [ ] Prevenção de criação abusiva de contas — definir regra e abordagem.
-- [ ] Outros: a definir.
+- [ ] **RF01 — Consultar monitorias:** permitir que estudantes encontrem monitorias por disciplina/matéria.
+- [ ] **RF02 — Consultar horários:** apresentar dias e horários de atendimento e a disponibilidade informada para cada monitoria.
+- [ ] **RF03 — Candidatar-se/participar:** definir e oferecer o fluxo para o estudante solicitar ou acessar uma monitoria. A transcrição não deixa claro se o aluno se inscreve previamente ou apenas comparece; confirmar.
+- [ ] **RF04 — Cadastrar monitoria:** permitir o cadastro das informações necessárias da monitoria, como matéria, monitor e horários; definir quem pode cadastrar.
+- [ ] **RF05 — Validar monitor:** permitir que o professor responsável valide/aprove monitores e sua relação com a matéria. O trecho transcrito como “pelo salário” é ambíguo; foi interpretado provisoriamente como validação pela matéria/disciplina.
+- [ ] **RF06 — Informar disponibilidade:** permitir registrar/atualizar os dias e horários ocupados ou disponíveis do monitor, evitando oferecer horários indisponíveis.
+- [ ] **RF07 — Controlar criação de contas:** incluir uma medida de segurança para reduzir criação abusiva ou múltiplas contas; definir regra e mecanismo sem assumir autenticação completa própria.
+- [ ] **RF08 — Integrar autenticação externa:** prever integração com serviço de autenticação institucional/externo, caso confirmada como necessária; não presumir que o sistema implementará todo o provedor de autenticação.
 
 ### Restrições e requisitos de qualidade
 
-- [ ] Confirmar tecnologias e restrições de implementação.
-- [ ] Definir um cenário mensurável de desempenho e validar a estimativa de carga simultânea.
-- [ ] Descrever três requisitos arquiteturalmente significativos (ASRs) e explicar como influenciam as decisões.
-- [ ] Identificar requisitos de segurança, disponibilidade, modificabilidade e testabilidade pertinentes.
+- [ ] **Desempenho:** validar a meta inicial de até 50 requisições por segundo e esclarecer a estimativa de 3.000 usuários simultâneos; definir cenário e critério de teste.
+- [ ] **Simplicidade:** favorecer implementação e manutenção por equipe pequena; evitar complexidade arquitetural não justificada.
+- [ ] **Integração:** manter clara a comunicação via API REST e identificar a fronteira da integração externa de autenticação, se aprovada.
+- [ ] Descrever três requisitos arquiteturalmente significativos (ASRs) concretos e explicar como influenciam as decisões.
+- [ ] Identificar requisitos pertinentes de segurança, disponibilidade, modificabilidade e testabilidade.
 
 ## ADR
 
