@@ -52,8 +52,8 @@ Registrar pelo menos três decisões arquiteturais. Para cada ADR, documentar co
 
 ## Tecnologias
 
-- **Backend:** Java + Spring Boot (proposta inicial).
-- **Frontend:** a definir.
+- **Backend:** Java + Spring Boot (proposta inicial). - Maven.
+- **Frontend:** NEST.js - npm
 - **Persistência/banco de dados:** a definir.
 - **Testes e documentação da API:** a definir.
 - **Ferramentas de diagramas:** a definir.
