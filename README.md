@@ -2,6 +2,9 @@
 
 Projeto acadêmico de Design e Arquitetura de Software para propor uma solução de gerenciamento de monitorias acadêmicas. Este repositório será preenchido pelo grupo ao longo do trabalho; os itens abaixo são um rascunho inicial, não uma especificação final.
 
+## Escopo 
+Exatas UFPR
+
 ## Premissas iniciais — propostas pelo grupo, ainda a validar
 
 - Volume estimado: aproximadamente **100 monitorias por semestre**.
@@ -52,8 +55,8 @@ Registrar pelo menos três decisões arquiteturais. Para cada ADR, documentar co
 
 ## Tecnologias
 
-- **Backend:** Java + Spring Boot (proposta inicial). - Maven.
-- **Frontend:** NEST.js - npm
+- **Backend:** Java + Spring Boot (proposta inicial). - Maven - flaway para gerenciar banco dedados.
+- **Frontend:** NEST.js - npm - ESM - vitest
 - **Persistência/banco de dados:** a definir.
 - **Testes e documentação da API:** a definir.
 - **Ferramentas de diagramas:** a definir.
@@ -96,3 +99,9 @@ Não implementar nesta etapa. Quando o grupo iniciar o protótipo, o trabalho pe
 ## Evolução
 
 A preencher: analisar pelo menos duas mudanças possíveis e explicar quais partes seriam afetadas e quais permaneceriam estáveis.
+
+
+## Escolhas
+- MVC
+- Rest
+- Banco de dados relacional ACID postgres
