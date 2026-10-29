@@ -61,6 +61,26 @@ Registrar pelo menos três decisões arquiteturais. Para cada ADR, documentar co
 - **Testes e documentação da API:** a definir.
 - **Ferramentas de diagramas:** a definir.
 
+## Executar backend e frontend
+
+Na raiz do repositório, instale as dependências do frontend e do comando
+unificado uma vez:
+
+```bash
+npm install
+npm --prefix frontend install
+```
+
+Depois, inicie os dois serviços em paralelo:
+
+```bash
+npm run start:all
+```
+
+O backend Spring Boot fica disponível na porta `8080` e o frontend SSR NestJS
+na porta `3000`. O frontend usa `http://localhost:8080/api/v1` por padrão;
+altere `BACKEND_API_URL` se o backend estiver em outro endereço.
+
 ## Porque MVC?
 
 A preencher: explicar como o MVC será aplicado no sistema, como se relaciona com a organização em camadas e quais responsabilidades ficam em cada parte. Justificar a escolha com base nos requisitos e ASRs, não apenas citar o padrão.

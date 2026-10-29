@@ -1,0 +1,11 @@
+{
+  "name": "monitoria-ufpr",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start:all": "concurrently --kill-others --names backend,frontend \"cd backend && ./mvnw spring-boot:run\" \"npm --prefix frontend run start:dev\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
