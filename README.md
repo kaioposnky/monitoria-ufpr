@@ -123,5 +123,36 @@ A preencher: analisar pelo menos duas mudanças possíveis e explicar quais part
 
 ## Escolhas
 - MVC
-- Rest
+- Rest - ou seja, front e back desaclopados
 - Banco de dados relacional ACID postgres
+- Usar Swagger para mapear apis
+
+documentação estará disponível em:
+- **Swagger UI:** `http://localhost:8080/swagger-ui.html`
+
+- **OpenAPI JSON:** `http://localhost:8080/v3/api-docs`
+
+## Backend REST
+
+monolito back: camadas `controller`, `service`, `repository`, `entity`, `dto` e `exception`. A API é stateless e usa PostgreSQL com
+JPA/Flyway. O prefixo das rotas é `/api/v1`.
+
+Os recursos persistidos possuem operações REST:
+
+- `GET` consulta um recurso ou coleção;
+- `POST` cria recursos;
+- `PUT` substitui os dados editáveis de um recurso;
+- `PATCH` altera parcialmente um recurso ou seu status;
+- `DELETE` remove um recurso, respeitando as restrições de integridade do banco.
+
+endpoints:
+
+- `/api/v1/cursos`
+- `/api/v1/materias`
+- `/api/v1/cursos-materias`
+- `/api/v1/usuarios`
+- `/api/v1/vagas-monitoria`
+- `/api/v1/candidaturas`
+- `/api/v1/monitores`
+- `/api/v1/horarios-atendimento`
+- `/api/v1/registros-atividades`
