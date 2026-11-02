@@ -81,6 +81,56 @@ O backend Spring Boot fica disponível na porta `8080` e o frontend SSR NestJS
 na porta `3000`. O frontend usa `http://localhost:8080/api/v1` por padrão;
 altere `BACKEND_API_URL` se o backend estiver em outro endereço.
 
+### Configurar o PostgreSQL local
+
+O backend usa PostgreSQL por padrão em `localhost:5432`, no banco
+`monitoria_ufpr`, com o usuário `postgres`. A senha não é armazenada no
+repositório: defina `SPRING_DATASOURCE_PASSWORD` no ambiente antes de iniciar a
+aplicação. As variáveis `SPRING_DATASOURCE_URL` e
+`SPRING_DATASOURCE_USERNAME` também podem ser usadas para uma instalação
+diferente. O arquivo `.env.example` lista todas as variáveis relevantes, mas
+não é carregado automaticamente pelo Spring Boot; use-o como modelo local e
+nunca o preencha com uma senha real para versioná-lo.
+
+Exemplo usando um usuário dedicado local (recomendado):
+
+```bash
+sudo -u postgres psql
+```
+
+```sql
+CREATE USER monitoria_app WITH PASSWORD 'escolha-uma-senha-local';
+CREATE DATABASE monitoria_ufpr OWNER monitoria_app;
+\q
+```
+
+```bash
+export SPRING_DATASOURCE_URL='jdbc:postgresql://localhost:5432/monitoria_ufpr'
+export SPRING_DATASOURCE_USERNAME='monitoria_app'
+export SPRING_DATASOURCE_PASSWORD='escolha-uma-senha-local'
+cd backend && ./mvnw spring-boot:run
+```
+
+Alternativamente, depois de criar uma cópia local de `.env.example` chamada
+`.env` e preencher os valores nela, carregue-a no shell antes de iniciar:
+
+```bash
+set -a
+source .env
+set +a
+npm run start:all
+```
+
+Se o banco ou o usuário já existirem, não execute os comandos `CREATE`
+novamente: confirme os valores com `\du` e `\l` no `psql` e ajuste apenas as
+variáveis de ambiente. Um erro `password authentication failed` indica
+credenciais incorretas para o usuário configurado; corrija a senha no
+PostgreSQL ou no ambiente, sem desabilitar a autenticação. O schema é criado
+pelas migrações Flyway na primeira inicialização.
+
+Os testes não dependem de PostgreSQL: `backend/src/test/resources/application.properties`
+continua usando H2 em memória e desativa o Flyway e o Redis.
+
 ## Porque MVC?
 
 A preencher: explicar como o MVC será aplicado no sistema, como se relaciona com a organização em camadas e quais responsabilidades ficam em cada parte. Justificar a escolha com base nos requisitos e ASRs, não apenas citar o padrão.
