@@ -81,16 +81,30 @@ O backend Spring Boot fica disponível na porta `8080` e o frontend SSR NestJS
 na porta `3000`. O frontend usa `http://localhost:8080/api/v1` por padrão;
 altere `BACKEND_API_URL` se o backend estiver em outro endereço.
 
+O comando `npm run start:all` usa o perfil `dev`, que inicializa o backend com
+H2 em memória, aplica as migrações Flyway e carrega os dados fictícios sem
+depender de PostgreSQL, senha ou Redis locais. Para iniciar apenas o backend:
+
+```bash
+cd backend
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+```
+
+Confirme a inicialização em `http://localhost:8080/actuator/health`.
+
 ### Configurar o PostgreSQL local
 
-O backend usa PostgreSQL por padrão em `localhost:5432`, no banco
-`monitoria_ufpr`, com o usuário `postgres`. A senha não é armazenada no
+O perfil padrão do backend continua usando PostgreSQL em `localhost:5432`, no
+banco `monitoria_ufpr`, com o usuário `postgres`. A senha não é armazenada no
 repositório: defina `SPRING_DATASOURCE_PASSWORD` no ambiente antes de iniciar a
 aplicação. As variáveis `SPRING_DATASOURCE_URL` e
 `SPRING_DATASOURCE_USERNAME` também podem ser usadas para uma instalação
 diferente. O arquivo `.env.example` lista todas as variáveis relevantes, mas
 não é carregado automaticamente pelo Spring Boot; use-o como modelo local e
 nunca o preencha com uma senha real para versioná-lo.
+
+Para usar PostgreSQL explicitamente, não ative o perfil `dev` e forneça as
+credenciais por variáveis de ambiente conforme os exemplos abaixo.
 
 Exemplo usando um usuário dedicado local (recomendado):
 
