@@ -5,6 +5,7 @@
     "typescript/no-floating-promises": "error"
   },
   "env": {
+    "browser": true,
     "node": true
   }
 }

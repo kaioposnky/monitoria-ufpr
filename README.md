@@ -10,12 +10,10 @@ Exatas UFPR
 - Volume estimado: aproximadamente **100 monitorias por semestre**.
 - Estimativa de ocupação: **30 alunos por monitoria/sala**, cerca de 3.000 participações no semestre. A transcrição também menciona “3.000 simultâneos”, mas isso precisa ser esclarecido: usuários simultâneos e requisições por segundo são métricas diferentes.
 - Meta de desempenho mencionada: até **50 requisições por segundo**. Confirmar se é requisito, pico esperado ou apenas estimativa, e definir como será verificada.
-- Arquitetura proposta: **um monólito**, organizado em camadas, com MVC na camada de apresentação e API REST.
-- Backend proposto: **Java com Spring Boot**.
-- Frontend separado do backend; tecnologia ainda não escolhida.
+- Backend: monólito Spring Boot organizado em camadas e exposto por API REST.
+- Frontend separado: SPA com **Vite + React + TypeScript**, organizada por funcionalidade. A apresentação usa componentes, não MVC clássico.
 - A interface deve seguir a identidade visual/design da UFPR; o grupo não busca uma interface visual sofisticada. Detalhar os critérios visuais depois.
 - A solução deve ser simples e rápida de implementar por uma equipe pequena, evitando complexidade sem justificativa.
-- Considerar integração futura com serviços externos, inclusive autenticação institucional, se necessário. A fala indica integrar com um serviço existente em vez de construir autenticação completa; confirmar o escopo com o grupo.
 
 ## Requisitos
 
@@ -34,14 +32,13 @@ Exatas UFPR
 - [ ] **RF04 — Cadastrar monitoria:** permitir o cadastro das informações necessárias da monitoria, como matéria, monitor e horários; definir quem pode cadastrar.
 - [ ] **RF05 — Validar monitor:** permitir que o professor responsável valide/aprove monitores e sua relação com a matéria. O trecho transcrito como “pelo salário” é ambíguo; foi interpretado provisoriamente como validação pela matéria/disciplina.
 - [ ] **RF06 — Informar disponibilidade:** permitir registrar/atualizar os dias e horários ocupados ou disponíveis do monitor, evitando oferecer horários indisponíveis.
-- [ ] **RF07 — Controlar criação de contas:** incluir uma medida de segurança para reduzir criação abusiva ou múltiplas contas; definir regra e mecanismo sem assumir autenticação completa própria.
-- [ ] **RF08 — Integrar autenticação externa:** prever integração com serviço de autenticação institucional/externo, caso confirmada como necessária; não presumir que o sistema implementará todo o provedor de autenticação.
 
 ### Restrições e requisitos de qualidade
 
+- [ ] **Compatibilidade de interface — desktop e mobile:** a interface web deve permitir o uso das funcionalidades do sistema em navegadores de computadores e smartphones, adaptando o layout ao tamanho da tela sem perda de conteúdo ou de acesso às ações. A verificação deve cobrir os fluxos em ambos os formatos; definir as larguras de tela e os navegadores de referência.
 - [ ] **Desempenho:** validar a meta inicial de até 50 requisições por segundo e esclarecer a estimativa de 3.000 usuários simultâneos; definir cenário e critério de teste.
 - [ ] **Simplicidade:** favorecer implementação e manutenção por equipe pequena; evitar complexidade arquitetural não justificada.
-- [ ] **Integração:** manter clara a comunicação via API REST e identificar a fronteira da integração externa de autenticação, se aprovada.
+- [ ] **Comunicação:** manter clara a comunicação entre frontend e backend via API REST.
 - [ ] Descrever três requisitos arquiteturalmente significativos (ASRs) concretos e explicar como influenciam as decisões.
 - [ ] Identificar requisitos pertinentes de segurança, disponibilidade, modificabilidade e testabilidade.
 
@@ -51,12 +48,12 @@ Registrar pelo menos três decisões arquiteturais. Para cada ADR, documentar co
 
 - [ ] ADR 001 — Organização arquitetural (rascunho: monólito em camadas com MVC).
 - [ ] ADR 002 — Persistência e acesso a dados.
-- [ ] ADR 003 — Integração externa substituível (por exemplo, autenticação ou notificação; escolher após definir escopo).
+- [ ] ADR 003 — A definir conforme as decisões arquiteturais efetivamente adotadas; sem pressupor integração externa.
 
 ## Tecnologias
 
 - **Backend:** Java + Spring Boot (proposta inicial). - Maven - flaway para gerenciar banco dedados.
-- **Frontend:** NEST.js - npm - ESM - vitest
+- **Frontend:** Vite + React + TypeScript + React Router; npm, ESM e Vitest.
 - **Persistência/banco de dados:** a definir.
 - **Testes e documentação da API:** a definir.
 - **Ferramentas de diagramas:** a definir.
@@ -77,9 +74,11 @@ Depois, inicie os dois serviços em paralelo:
 npm run start:all
 ```
 
-O backend Spring Boot fica disponível na porta `8080` e o frontend SSR NestJS
-na porta `3000`. O frontend usa `http://localhost:8080/api/v1` por padrão;
-altere `BACKEND_API_URL` se o backend estiver em outro endereço.
+O backend Spring Boot fica disponível na porta `8080` e o frontend Vite em
+`http://localhost:5173`. As consultas usam `/api/v1`; o proxy de desenvolvimento
+encaminha `/api` para `http://localhost:8080`. Para outro backend, configure
+`BACKEND_PROXY_TARGET` em `frontend/.env.local`. Veja [frontend/README.md](frontend/README.md)
+para build, publicação estática e configuração de produção.
 
 O comando `npm run start:all` usa o perfil `dev`, que inicializa o backend com
 H2 em memória, aplica as migrações Flyway e carrega os dados fictícios sem
@@ -145,9 +144,22 @@ pelas migrações Flyway na primeira inicialização.
 Os testes não dependem de PostgreSQL: `backend/src/test/resources/application.properties`
 continua usando H2 em memória e desativa o Flyway e o Redis.
 
-## Porque MVC?
+## Organização da apresentação
 
-A preencher: explicar como o MVC será aplicado no sistema, como se relaciona com a organização em camadas e quais responsabilidades ficam em cada parte. Justificar a escolha com base nos requisitos e ASRs, não apenas citar o padrão.
+O frontend foi migrado de NestJS SSR para Vite + React + TypeScript. A escolha
+prioriza a simplicidade para uma equipe pequena: o Spring permanece como único
+backend e responsável pelas regras de negócio e persistência. Não há requisito
+confirmado de SEO ou renderização no servidor que justifique outro servidor Node.
+
+`app` define layout e rotas; `features/catalog` concentra telas e contratos do
+catálogo; `shared/api` centraliza HTTP; `shared/useQuery` coordena carregamento,
+erro e cancelamento. Views não acessam o banco. A separação favorece SRP, alta
+coesão e baixo acoplamento sem criar serviços que apenas repassam chamadas.
+
+Trade-off: o navegador precisa de JavaScript e a hospedagem deve encaminhar rotas
+da SPA para `index.html`. Uma SPA não traz SSR/SEO por padrão. Next.js e manter
+NestJS SSR foram descartados nesta migração por adicionarem conceitos e runtime
+de servidor sem uma necessidade atual demonstrada.
 
 ## Porque não Arquitetura de Serviços?
 
@@ -159,7 +171,10 @@ A preencher: comparar com a proposta de monólito, considerando tamanho da equip
 
 ## Comunicação
 
-A preencher: descrever a comunicação entre frontend e backend, interfaces/endpoints relevantes, protocolo, formato das mensagens e comunicação com integrações externas. Proposta inicial: API REST entre frontend e backend.
+O navegador consulta a API REST Spring por HTTP/JSON. Em desenvolvimento, o proxy
+do Vite mantém as chamadas na mesma origem. Em produção, publicar os arquivos
+estáticos de `frontend/dist` e encaminhar `/api` ao Spring. O proxy do Vite não
+faz parte do bundle. Contratos TypeScript ficam em `features/catalog/catalog.types.ts`.
 
 ## Trade Offs da arquitetura escolhida
 
@@ -176,9 +191,16 @@ A preencher: identificar os principais componentes/módulos, responsabilidades, 
 - [ ] Diagrama de comunicação.
 - [ ] Diagrama de componentes ou pacotes.
 
-## Protótipo — fase futura
+## Estado do protótipo
 
-Não implementar nesta etapa. Quando o grupo iniciar o protótipo, o trabalho pede uma fatia vertical demonstrativa que inclua um caso de uso que altera estado, uma consulta, um fluxo alternativo/erro, persistência e uma dependência externa real ou simulada.
+O frontend oferece consultas de cursos, matérias, vínculos e vagas, incluindo
+detalhes de vaga. Carregamento, lista vazia, indisponibilidade e recurso não
+encontrado são estados distintos. Os antigos formulários de escrita e telas sem
+endpoint foram removidos: a API atual só implementa leitura de catálogo.
+
+A fatia vertical exigida pela disciplina ainda precisa de comando com persistência,
+consulta, erro relevante e dependência externa substituível. A migração do frontend
+não implementa candidatura, seleção, autenticação ou CRUD no backend.
 
 ## Evolução
 
@@ -186,8 +208,8 @@ A preencher: analisar pelo menos duas mudanças possíveis e explicar quais part
 
 
 ## Escolhas
-- MVC
-- Rest - ou seja, front e back desaclopados
+- Backend monolítico em camadas; frontend React por funcionalidade.
+- API REST com contrato explícito entre frontend e backend; REST não elimina acoplamento.
 - Banco de dados relacional ACID postgres
 - Usar Swagger para mapear apis
 
@@ -198,25 +220,16 @@ documentação estará disponível em:
 
 ## Backend REST
 
-monolito back: camadas `controller`, `service`, `repository`, `entity`, `dto` e `exception`. A API é stateless e usa PostgreSQL com
-JPA/Flyway. O prefixo das rotas é `/api/v1`.
+O backend atual implementa catálogo em `catalog`, com controller, serviço,
+repositórios JPA, entidades e DTOs. PostgreSQL é usado no perfil padrão e H2 no
+perfil `dev`; migrations são gerenciadas pelo Flyway.
 
-Os recursos persistidos possuem operações REST:
+Endpoints implementados, todos de leitura:
 
-- `GET` consulta um recurso ou coleção;
-- `POST` cria recursos;
-- `PUT` substitui os dados editáveis de um recurso;
-- `PATCH` altera parcialmente um recurso ou seu status;
-- `DELETE` remove um recurso, respeitando as restrições de integridade do banco.
+- `GET /api/v1/courses` e `GET /api/v1/courses/{id}`;
+- `GET /api/v1/subjects` e `GET /api/v1/subjects/{id}`;
+- `GET /api/v1/course-subjects`, com filtro opcional `courseId`;
+- `GET /api/v1/monitoring-vacancies` e `GET /api/v1/monitoring-vacancies/{id}`.
 
-endpoints:
-
-- `/api/v1/cursos`
-- `/api/v1/materias`
-- `/api/v1/cursos-materias`
-- `/api/v1/usuarios`
-- `/api/v1/vagas-monitoria`
-- `/api/v1/candidaturas`
-- `/api/v1/monitores`
-- `/api/v1/horarios-atendimento`
-- `/api/v1/registros-atividades`
+A existência de tabelas para usuários, candidaturas, monitores, horários e atividades
+não representa endpoints implementados. Não há escrita disponível no controller atual.

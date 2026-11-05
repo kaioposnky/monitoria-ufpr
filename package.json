@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start:all": "concurrently --kill-others --names backend,frontend \"cd backend && ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev\" \"npm --prefix frontend run start:dev\""
+    "start:all": "concurrently --kill-others --names backend,frontend \"cd backend && ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev\" \"npm --prefix frontend run dev\""
   },
   "devDependencies": {
     "concurrently": "^9.2.1"
