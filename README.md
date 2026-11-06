@@ -77,7 +77,7 @@ npm run start:all
 O backend Spring Boot fica disponível na porta `8080` e o frontend Vite em
 `http://localhost:5173`. As consultas usam `/api/v1`; o proxy de desenvolvimento
 encaminha `/api` para `http://localhost:8080`. Para outro backend, configure
-`BACKEND_PROXY_TARGET` em `frontend/.env.local`. Veja [frontend/README.md](frontend/README.md)
+`BACKEND_PROXY_TARGET` em `frontend/.env.local`. Veja [frontend/AGENTS.md](frontend/AGENTS.md)
 para build, publicação estática e configuração de produção.
 
 O comando `npm run start:all` usa o perfil `dev`, que inicializa o backend com
@@ -151,10 +151,11 @@ prioriza a simplicidade para uma equipe pequena: o Spring permanece como único
 backend e responsável pelas regras de negócio e persistência. Não há requisito
 confirmado de SEO ou renderização no servidor que justifique outro servidor Node.
 
-`app` define layout e rotas; `features/catalog` concentra telas e contratos do
-catálogo; `shared/api` centraliza HTTP; `shared/useQuery` coordena carregamento,
-erro e cancelamento. Views não acessam o banco. A separação favorece SRP, alta
-coesão e baixo acoplamento sem criar serviços que apenas repassam chamadas.
+`app` compõe as rotas; `pages` separa cada página em sua pasta; `components` mantém
+um componente por pasta com funções exportadas e props no próprio TSX.
+`features/catalog` concentra contratos e chamadas; `shared/api` centraliza HTTP;
+`shared/useQuery` coordena carregamento, erro e cancelamento. A separação favorece
+SRP, alta coesão e baixo acoplamento sem serviços de simples repasse.
 
 Trade-off: o navegador precisa de JavaScript e a hospedagem deve encaminhar rotas
 da SPA para `index.html`. Uma SPA não traz SSR/SEO por padrão. Next.js e manter
@@ -193,14 +194,17 @@ A preencher: identificar os principais componentes/módulos, responsabilidades, 
 
 ## Estado do protótipo
 
-O frontend oferece consultas de cursos, matérias, vínculos e vagas, incluindo
-detalhes de vaga. Carregamento, lista vazia, indisponibilidade e recurso não
-encontrado são estados distintos. Os antigos formulários de escrita e telas sem
-endpoint foram removidos: a API atual só implementa leitura de catálogo.
+O frontend oferece consultas reais de cursos, matérias, vínculos e vagas, incluindo
+filtros e detalhes. Carregamento, lista vazia e falhas são estados distintos.
+As páginas de candidatura, preparação de vaga, revisão pelo responsável e
+disponibilidade permitem preencher, validar e revisar rascunhos, sem envio ou
+persistência. A consulta de horários ainda depende de endpoint e é indicada como
+indisponível. Veja o mapa de requisitos e limites em [frontend/docs/CONTINUIDADE.md](frontend/docs/CONTINUIDADE.md)
+e as decisões para análise do grupo em [frontend/docs/DECISOES.md](frontend/docs/DECISOES.md).
 
-A fatia vertical exigida pela disciplina ainda precisa de comando com persistência,
-consulta, erro relevante e dependência externa substituível. A migração do frontend
-não implementa candidatura, seleção, autenticação ou CRUD no backend.
+A fatia vertical da disciplina ainda precisa de escrita real com persistência,
+consulta, erro relevante e dependência externa substituível. Rascunhos de frontend
+não demonstram candidatura persistida, aprovação, autenticação ou autorização.
 
 ## Evolução
 
