@@ -109,7 +109,7 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
-					<mainClass>com.exemplo.demo.MonitoriaUfprApplication</mainClass>
+					<mainClass>com.sistema.SistemaApplication</mainClass>
 				</configuration>
 			</plugin>
 		</plugins>
