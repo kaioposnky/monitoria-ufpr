@@ -43,9 +43,9 @@ public class VagaMonitoria {
     @Column(name = "tipo_vaga", nullable = false, length = 30)
     private TipoVaga tipoVaga;
 
-    @jakarta.persistence.Lob
+    @Column(columnDefinition = "TEXT")
     private String requisitos;
-    @jakarta.persistence.Lob
+    @Column(columnDefinition = "TEXT")
     private String descricao;
 
     @Enumerated(EnumType.STRING)

@@ -8,13 +8,82 @@ async function list<T>(path: string, signal: AbortSignal): Promise<T[]> {
   return result;
 }
 
+interface CursoDto {
+  id: number;
+  codigo: string;
+  nome: string;
+  setor: string | null;
+}
+
+interface MateriaDto {
+  id: number;
+  codigo: string;
+  nome: string;
+  departamento: string | null;
+}
+
+interface CursoMateriaDto {
+  cursoId: number;
+  materiaId: number;
+}
+
+interface VagaMonitoriaDto {
+  id: number;
+  materiaId: number;
+  professorId: number;
+  semestre: string;
+  quantidadeVagas: number;
+  tipoVaga: string;
+  requisitos: string | null;
+  descricao: string | null;
+  status: string;
+}
+
+const mapCourse = (dto: CursoDto): Course => ({
+  id: dto.id,
+  code: dto.codigo,
+  name: dto.nome,
+  sector: dto.setor,
+});
+
+const mapSubject = (dto: MateriaDto): Subject => ({
+  id: dto.id,
+  code: dto.codigo,
+  name: dto.nome,
+  department: dto.departamento,
+});
+
+const mapRelation = (dto: CursoMateriaDto): CourseSubject => ({
+  courseId: dto.cursoId,
+  subjectId: dto.materiaId,
+});
+
+const mapVacancy = (dto: VagaMonitoriaDto): Vacancy => ({
+  id: dto.id,
+  subjectId: dto.materiaId,
+  professorId: dto.professorId,
+  semester: dto.semestre,
+  positions: dto.quantidadeVagas,
+  type: dto.tipoVaga,
+  requirements: dto.requisitos,
+  description: dto.descricao,
+  status: dto.status,
+});
+
 export const loadCourses = (signal: AbortSignal) =>
-  list<Course>('/courses', signal);
+  list<CursoDto>('/cursos', signal).then((items) => items.map(mapCourse));
 export const loadSubjects = (signal: AbortSignal) =>
-  list<Subject>('/subjects', signal);
+  list<MateriaDto>('/materias', signal).then((items) => items.map(mapSubject));
 export const loadVacancies = (signal: AbortSignal) =>
-  list<Vacancy>('/monitoring-vacancies', signal);
+  list<VagaMonitoriaDto>('/vagas-monitoria', signal).then((items) =>
+    items.map(mapVacancy),
+  );
 export const loadRelations = (signal: AbortSignal) =>
-  list<CourseSubject>('/course-subjects', signal);
+  list<CursoMateriaDto>('/cursos-materias', signal).then((items) =>
+    items.map(mapRelation),
+  );
 export const loadVacancy = (id: string, signal: AbortSignal) =>
-  getJson<Vacancy>('/monitoring-vacancies/' + encodeURIComponent(id), signal);
+  getJson<VagaMonitoriaDto>(
+    '/vagas-monitoria/' + encodeURIComponent(id),
+    signal,
+  ).then(mapVacancy);

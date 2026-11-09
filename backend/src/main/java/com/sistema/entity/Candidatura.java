@@ -14,7 +14,7 @@ public class Candidatura {
     @Column(name = "aluno_id", nullable = false) private Long alunoId;
     @Column(name = "nota_disciplina", precision = 4, scale = 2) private BigDecimal notaDisciplina;
     @Column(precision = 4, scale = 2) private BigDecimal cr;
-    @Lob private String justificativa;
+    @Column(columnDefinition = "TEXT") private String justificativa;
     @Enumerated(EnumType.STRING) @Column(nullable = false, length = 20)
     private StatusCandidatura status = StatusCandidatura.PENDENTE;
     @Column(name = "criado_em", insertable = false, updatable = false) private OffsetDateTime criadoEm;

@@ -16,10 +16,10 @@ public class RegistroAtividade {
     @Column(name = "hora_inicio", nullable = false) private LocalTime horaInicio;
     @Column(name = "hora_fim", nullable = false) private LocalTime horaFim;
     @Enumerated(EnumType.STRING) @Column(name = "tipo_atividade", nullable = false, length = 50) private TipoAtividade tipoAtividade;
-    @Lob @Column(nullable = false) private String descricao;
+    @Column(nullable = false, columnDefinition = "TEXT") private String descricao;
     @Column(name = "quantidade_alunos_atendidos") private Integer quantidadeAlunosAtendidos = 0;
     @Enumerated(EnumType.STRING) @Column(name = "status_aprovacao", nullable = false, length = 20) private StatusAprovacao statusAprovacao = StatusAprovacao.PENDENTE;
-    @Column(name = "feedback_professor")     @Lob private String feedbackProfessor;
+    @Column(name = "feedback_professor", columnDefinition = "TEXT") private String feedbackProfessor;
     @Column(name = "criado_em", insertable = false, updatable = false) private OffsetDateTime criadoEm;
     protected RegistroAtividade() {}
     public RegistroAtividade(Long monitorId, LocalDate data, LocalTime inicio, LocalTime fim, TipoAtividade tipo, String descricao, Integer quantidade) {
