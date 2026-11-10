@@ -14,6 +14,12 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(CredenciaisInvalidasException.class)
+    ResponseEntity<?> credenciaisInvalidas(CredenciaisInvalidasException exception, HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(erro(HttpStatus.UNAUTHORIZED, exception.getMessage(), request.getRequestURI()));
+    }
+
     @ExceptionHandler(RecursoNaoEncontradoException.class)
     ResponseEntity<?> recursoNaoEncontrado(RecursoNaoEncontradoException exception, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)

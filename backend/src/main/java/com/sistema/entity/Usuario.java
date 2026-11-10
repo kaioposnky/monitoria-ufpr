@@ -42,18 +42,22 @@ public class Usuario {
     @Column(nullable = false)
     private boolean ativo = true;
 
+    @Column(name = "senha_hash", nullable = false, length = 255)
+    private String senhaHash;
+
     @Column(name = "criado_em", insertable = false, updatable = false)
     private OffsetDateTime criadoEm;
 
     protected Usuario() {
     }
 
-    public Usuario(String nome, String email, TipoUsuario tipoUsuario, String matricula, Long cursoId) {
+    public Usuario(String nome, String email, TipoUsuario tipoUsuario, String matricula, Long cursoId, String senhaHash) {
         this.nome = nome;
         this.email = email;
         this.tipoUsuario = tipoUsuario;
         this.matricula = matricula;
         this.cursoId = cursoId;
+        this.senhaHash = senhaHash;
     }
 
     public Long getId() { return id; }
@@ -63,15 +67,22 @@ public class Usuario {
     public String getMatricula() { return matricula; }
     public Long getCursoId() { return cursoId; }
     public boolean isAtivo() { return ativo; }
+    public String getSenhaHash() { return senhaHash; }
     public OffsetDateTime getCriadoEm() { return criadoEm; }
 
-    public void atualizar(String nome, String email, String matricula, Long cursoId, Boolean ativo) {
+    public void atualizar(String nome, String email, TipoUsuario tipoUsuario, String matricula, Long cursoId, Boolean ativo, String novaSenhaHash) {
         this.nome = nome;
         this.email = email;
+        if (tipoUsuario != null) {
+            this.tipoUsuario = tipoUsuario;
+        }
         this.matricula = matricula;
         this.cursoId = cursoId;
         if (ativo != null) {
             this.ativo = ativo;
+        }
+        if (novaSenhaHash != null && !novaSenhaHash.isBlank()) {
+            this.senhaHash = novaSenhaHash;
         }
     }
 }

@@ -7,6 +7,7 @@ import com.sistema.entity.Usuario;
 import com.sistema.exception.RecursoNaoEncontradoException;
 import com.sistema.exception.RegraNegocioException;
 import com.sistema.repository.UsuarioRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,9 +17,11 @@ import java.util.List;
 public class UsuarioService {
 
     private final UsuarioRepository repository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UsuarioService(UsuarioRepository repository) {
+    public UsuarioService(UsuarioRepository repository, PasswordEncoder passwordEncoder) {
         this.repository = repository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
@@ -26,8 +29,9 @@ public class UsuarioService {
         if (repository.existsByEmail(dto.email())) {
             throw new RegraNegocioException("Já existe um usuário com este e-mail.");
         }
+        String senhaHash = passwordEncoder.encode(dto.senha());
         return UsuarioResponseDTO.from(repository.save(new Usuario(dto.nome(), dto.email(),
-                dto.tipoUsuario(), dto.matricula(), dto.cursoId())));
+                dto.tipoUsuario(), dto.matricula(), dto.cursoId(), senhaHash)));
     }
 
     @Transactional(readOnly = true)
@@ -48,7 +52,11 @@ public class UsuarioService {
         if (repository.existsByEmailAndIdNot(dto.email(), id)) {
             throw new RegraNegocioException("Já existe um usuário com este e-mail.");
         }
-        usuario.atualizar(dto.nome(), dto.email(), dto.matricula(), dto.cursoId(), dto.ativo());
+        String novaSenhaHash = dto.senha() != null && !dto.senha().isBlank()
+                ? passwordEncoder.encode(dto.senha())
+                : null;
+        usuario.atualizar(dto.nome(), dto.email(), dto.tipoUsuario(), dto.matricula(), dto.cursoId(),
+                dto.ativo(), novaSenhaHash);
         return UsuarioResponseDTO.from(usuario);
     }
 
