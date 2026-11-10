@@ -1,34 +1,72 @@
 import { useState, type FormEvent } from 'react';
-import type { MonitorReviewDraft } from '../../features/monitoring/monitoring.types';
-import { REVIEW_DECISIONS } from '../../features/monitoring/monitoring.types';
+import type { Subject, Vacancy } from '../../features/catalog/catalog.types';
+import { reviewApplicationStatus } from '../../features/monitoring/monitoring.api';
 import {
-  displayOptional,
+  APPLICATION_STATUS_LABELS,
+  formatSubjectLabel,
   isPositiveInteger,
   REVIEW_DECISION_LABELS,
 } from '../../features/monitoring/monitoring.rules';
-import { useDraftReview } from '../../features/monitoring/useDraftReview';
-import { DraftReview } from '../DraftReview/DraftReview';
+import {
+  REVIEW_DECISIONS,
+  type Application,
+  type MonitorReviewDraft,
+  type UserSummary,
+} from '../../features/monitoring/monitoring.types';
+import { errorMessage } from '../../shared/api/http';
 import { FormField } from '../FormField/FormField';
-import { IntegrationNotice } from '../IntegrationNotice/IntegrationNotice';
+
+type Props = {
+  applications: Application[];
+  vacancies: Vacancy[];
+  subjects: Subject[];
+  users: UserSummary[];
+  onUpdated?: (updated: Application) => void;
+};
 
 type Errors = Partial<Record<keyof MonitorReviewDraft, string>>;
 
 const emptyDraft: MonitorReviewDraft = {
   applicationId: '',
   decision: '',
-  observation: '',
 };
 
-export function MonitorReviewForm() {
+export function MonitorReviewForm({
+  applications,
+  vacancies,
+  subjects,
+  users,
+  onUpdated,
+}: Props) {
   const [draft, setDraft] = useState<MonitorReviewDraft>(emptyDraft);
   const [errors, setErrors] = useState<Errors>({});
-  const review = useDraftReview();
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const vacancyById = new Map(vacancies.map((v) => [v.id, v]));
+  const subjectById = new Map(subjects.map((s) => [s.id, s]));
+  const userById = new Map(users.map((u) => [u.id, u]));
+
+  function formatApplicationOption(app: Application): string {
+    const student = userById.get(app.studentId);
+    const vacancy = vacancyById.get(app.vacancyId);
+    const subject = vacancy ? subjectById.get(vacancy.subjectId) : undefined;
+    const subjectText = subject
+      ? formatSubjectLabel(subject)
+      : `Vaga #${app.vacancyId}`;
+    const studentText = student ? student.name : `Aluno #${app.studentId}`;
+    const statusText = APPLICATION_STATUS_LABELS[app.status] || app.status;
+    return `#${app.id} · ${studentText} · ${subjectText} [${statusText}]`;
+  }
 
   function update<K extends keyof MonitorReviewDraft>(
     field: K,
     value: MonitorReviewDraft[K],
   ) {
     setDraft((current) => ({ ...current, [field]: value }));
+    setSubmitError(null);
+    setSuccessMessage(null);
     setErrors((current) => {
       if (!current[field]) return current;
       const next = { ...current };
@@ -40,8 +78,7 @@ export function MonitorReviewForm() {
   function validate(values: MonitorReviewDraft): Errors {
     const next: Errors = {};
     if (!isPositiveInteger(values.applicationId)) {
-      next.applicationId =
-        'Informe um identificador de candidatura inteiro positivo.';
+      next.applicationId = 'Selecione uma candidatura para avaliar.';
     }
     if (!REVIEW_DECISIONS.some((decision) => decision === values.decision)) {
       next.decision = 'Selecione uma decisão.';
@@ -49,77 +86,69 @@ export function MonitorReviewForm() {
     return next;
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const next = validate(draft);
     setErrors(next);
-    if (Object.keys(next).length === 0) review.showReview();
-  }
+    if (Object.keys(next).length > 0 || !draft.decision) return;
 
-  if (review.reviewing) {
-    return (
-      <DraftReview
-        title="Revisar decisão"
-        onEdit={review.editDraft}
-        sections={[
-          {
-            title: 'Revisão da candidatura',
-            fields: [
-              { label: 'ID da candidatura', value: draft.applicationId },
-              {
-                label: 'Decisão',
-                value: draft.decision
-                  ? REVIEW_DECISION_LABELS[draft.decision]
-                  : 'Não selecionada',
-              },
-              {
-                label: 'Observação',
-                value: displayOptional(draft.observation, 'Não informada'),
-              },
-            ],
-          },
-        ]}
-      />
-    );
+    setSubmitting(true);
+    setSubmitError(null);
+    setSuccessMessage(null);
+    try {
+      const updated = await reviewApplicationStatus(
+        Number(draft.applicationId),
+        draft.decision,
+      );
+      setSuccessMessage(
+        `Candidatura #${updated.id} atualizada para ${APPLICATION_STATUS_LABELS[updated.status]}.`,
+      );
+      setDraft(emptyDraft);
+      onUpdated?.(updated);
+    } catch (error) {
+      setSubmitError(errorMessage(error));
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
     <form className="panel" onSubmit={handleSubmit} noValidate>
-      <h2 ref={review.formHeadingRef} tabIndex={-1}>
-        Dados da revisão
-      </h2>
-      <IntegrationNotice>
-        <p>
-          A API atual não permite aprovar nem reprovar candidaturas. Esta tela
-          apenas prepara a decisão que será analisada quando a integração
-          existir.
+      <h2>Registrar decisão sobre candidatura</h2>
+      {submitError && (
+        <p className="notice error" role="alert">
+          {submitError}
         </p>
-      </IntegrationNotice>
-      <p className="muted">
-        Campos propostos: candidatura, decisão e observação. Não há cálculo de
-        nota, ordenação ou ranking nesta etapa.
-      </p>
+      )}
+      {successMessage && (
+        <p className="notice success" role="status">
+          {successMessage}
+        </p>
+      )}
       <div className="form-grid">
         <FormField
-          label="ID da candidatura (obrigatório)"
+          label="Candidatura (obrigatório)"
           error={errors.applicationId}
-          hint="Referência à candidatura já registrada no sistema."
+          hint="Escolha a candidatura a ser avaliada."
         >
-          <input
+          <select
             name="applicationId"
-            type="number"
-            min="1"
-            step="1"
-            inputMode="numeric"
             value={draft.applicationId}
             onChange={(event) => update('applicationId', event.target.value)}
             required
-          />
+          >
+            <option value="">Selecione uma candidatura</option>
+            {applications.map((app) => (
+              <option key={app.id} value={app.id}>
+                {formatApplicationOption(app)}
+              </option>
+            ))}
+          </select>
         </FormField>
         <FormField
           label="Decisão (obrigatório)"
           error={errors.decision}
-          hint="A decisão é registrada manualmente pelo responsável."
+          hint="Atualiza o status diretamente no backend."
         >
           <select
             name="decision"
@@ -140,21 +169,14 @@ export function MonitorReviewForm() {
             ))}
           </select>
         </FormField>
-        <FormField
-          label="Observação (opcional)"
-          hint="Parecer ou justificativa da decisão."
-        >
-          <textarea
-            name="observation"
-            rows={4}
-            value={draft.observation}
-            onChange={(event) => update('observation', event.target.value)}
-          />
-        </FormField>
       </div>
       <div className="form-actions">
-        <button type="submit" className="primary">
-          Revisar dados
+        <button
+          type="submit"
+          className="primary"
+          disabled={submitting || applications.length === 0}
+        >
+          {submitting ? 'Registrando decisão...' : 'Confirmar decisão'}
         </button>
       </div>
     </form>

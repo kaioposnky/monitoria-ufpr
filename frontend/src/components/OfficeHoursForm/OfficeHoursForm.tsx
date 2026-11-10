@@ -1,18 +1,31 @@
 import { useState, type FormEvent } from 'react';
-import type { OfficeHoursDraft } from '../../features/monitoring/monitoring.types';
-import { WEEKDAYS } from '../../features/monitoring/monitoring.types';
+import type { Subject, Vacancy } from '../../features/catalog/catalog.types';
+import { createOfficeHours } from '../../features/monitoring/monitoring.api';
 import {
-  displayOptional,
+  formatSubjectLabel,
   isEndAfterStart,
   isHttpUrl,
   isPositiveInteger,
   isValidTime,
   WEEKDAY_LABELS,
 } from '../../features/monitoring/monitoring.rules';
-import { useDraftReview } from '../../features/monitoring/useDraftReview';
-import { DraftReview } from '../DraftReview/DraftReview';
+import {
+  WEEKDAYS,
+  type MonitorRecord,
+  type OfficeHoursDraft,
+  type OfficeHoursRecord,
+  type UserSummary,
+} from '../../features/monitoring/monitoring.types';
+import { errorMessage } from '../../shared/api/http';
 import { FormField } from '../FormField/FormField';
-import { IntegrationNotice } from '../IntegrationNotice/IntegrationNotice';
+
+type Props = {
+  monitors: MonitorRecord[];
+  vacancies: Vacancy[];
+  subjects: Subject[];
+  users?: UserSummary[];
+  onCreated?: (record: OfficeHoursRecord) => void;
+};
 
 type Errors = Partial<Record<keyof OfficeHoursDraft, string>>;
 
@@ -25,16 +38,45 @@ const emptyDraft: OfficeHoursDraft = {
   meetingLink: '',
 };
 
-export function OfficeHoursForm() {
-  const [draft, setDraft] = useState<OfficeHoursDraft>(emptyDraft);
+export function OfficeHoursForm({
+  monitors,
+  vacancies,
+  subjects,
+  users = [],
+  onCreated,
+}: Props) {
+  const activeMonitors = monitors.filter((m) => m.status === 'ATIVO');
+  const [draft, setDraft] = useState<OfficeHoursDraft>(() => ({
+    ...emptyDraft,
+    monitorId: activeMonitors.length === 1 ? String(activeMonitors[0].id) : '',
+  }));
   const [errors, setErrors] = useState<Errors>({});
-  const review = useDraftReview();
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const vacancyById = new Map(vacancies.map((v) => [v.id, v]));
+  const subjectById = new Map(subjects.map((s) => [s.id, s]));
+  const userById = new Map(users.map((u) => [u.id, u]));
+
+  function formatMonitorOption(monitor: MonitorRecord): string {
+    const vacancy = vacancyById.get(monitor.vacancyId);
+    const subject = vacancy ? subjectById.get(vacancy.subjectId) : undefined;
+    const student = userById.get(monitor.studentId);
+    const subjectText = subject
+      ? formatSubjectLabel(subject)
+      : `Vaga #${monitor.vacancyId}`;
+    const studentText = student ? student.name : `Aluno #${monitor.studentId}`;
+    return `Monitor #${monitor.id} · ${studentText} · ${subjectText}`;
+  }
 
   function update<K extends keyof OfficeHoursDraft>(
     field: K,
     value: OfficeHoursDraft[K],
   ) {
     setDraft((current) => ({ ...current, [field]: value }));
+    setSubmitError(null);
+    setSuccessMessage(null);
     setErrors((current) => {
       if (!current[field]) return current;
       const next = { ...current };
@@ -46,7 +88,7 @@ export function OfficeHoursForm() {
   function validate(values: OfficeHoursDraft): Errors {
     const next: Errors = {};
     if (!isPositiveInteger(values.monitorId)) {
-      next.monitorId = 'Informe um identificador de monitor inteiro positivo.';
+      next.monitorId = 'Selecione o vínculo de monitoria.';
     }
     if (!WEEKDAYS.some((weekday) => weekday === values.weekday)) {
       next.weekday = 'Selecione um dia da semana.';
@@ -77,76 +119,70 @@ export function OfficeHoursForm() {
     return next;
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const next = validate(draft);
     setErrors(next);
-    if (Object.keys(next).length === 0) review.showReview();
-  }
+    if (Object.keys(next).length > 0 || !draft.weekday) return;
 
-  if (review.reviewing) {
-    return (
-      <DraftReview
-        title="Revisar disponibilidade"
-        onEdit={review.editDraft}
-        sections={[
-          {
-            title: 'Disponibilidade',
-            fields: [
-              { label: 'ID do monitor', value: draft.monitorId },
-              {
-                label: 'Dia da semana',
-                value: draft.weekday
-                  ? WEEKDAY_LABELS[draft.weekday]
-                  : 'Não selecionado',
-              },
-              { label: 'Início', value: draft.startTime },
-              { label: 'Fim', value: draft.endTime },
-              { label: 'Local', value: draft.location },
-              {
-                label: 'Link da reunião',
-                value: displayOptional(draft.meetingLink),
-              },
-            ],
-          },
-        ]}
-      />
-    );
+    setSubmitting(true);
+    setSubmitError(null);
+    setSuccessMessage(null);
+    try {
+      const created = await createOfficeHours({
+        monitorId: Number(draft.monitorId),
+        diaSemana: draft.weekday,
+        horaInicio: draft.startTime,
+        horaFim: draft.endTime,
+        localAtendimento: draft.location.trim(),
+        linkReuniao: draft.meetingLink.trim() || null,
+      });
+      setSuccessMessage('Horário de atendimento cadastrado com sucesso.');
+      setDraft({
+        ...emptyDraft,
+        monitorId:
+          activeMonitors.length === 1 ? String(activeMonitors[0].id) : '',
+      });
+      onCreated?.(created);
+    } catch (error) {
+      setSubmitError(errorMessage(error));
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
     <form className="panel" onSubmit={handleSubmit} noValidate>
-      <h2 ref={review.formHeadingRef} tabIndex={-1}>
-        Dados de disponibilidade
-      </h2>
-      <IntegrationNotice>
-        <p>
-          A API atual não possui operação de consulta nem de gravação de
-          horários. A verificação de conflitos com horários já cadastrados não é
-          possível nesta tela.
+      <h2>Cadastrar novo horário de atendimento</h2>
+      {submitError && (
+        <p className="notice error" role="alert">
+          {submitError}
         </p>
-      </IntegrationNotice>
-      <p className="muted">
-        Campos propostos: monitor, dia da semana, horário inicial, horário
-        final, local e link opcional. O horário final precisa ser posterior ao
-        inicial.
-      </p>
+      )}
+      {successMessage && (
+        <p className="notice success" role="status">
+          {successMessage}
+        </p>
+      )}
       <div className="form-grid">
         <FormField
-          label="ID do monitor (obrigatório)"
+          label="Monitoria vinculada (obrigatório)"
           error={errors.monitorId}
-          hint="Referência ao monitor já cadastrado. Esta tela não autentica usuários."
+          hint="Selecione um vínculo ativo de monitoria."
         >
-          <input
+          <select
             name="monitorId"
-            type="number"
-            min="1"
-            step="1"
-            inputMode="numeric"
             value={draft.monitorId}
             onChange={(event) => update('monitorId', event.target.value)}
             required
-          />
+          >
+            <option value="">Selecione um monitor</option>
+            {activeMonitors.map((monitor) => (
+              <option key={monitor.id} value={monitor.id}>
+                {formatMonitorOption(monitor)}
+              </option>
+            ))}
+          </select>
         </FormField>
         <FormField label="Dia da semana (obrigatório)" error={errors.weekday}>
           <select
@@ -223,8 +259,12 @@ export function OfficeHoursForm() {
         </FormField>
       </div>
       <div className="form-actions">
-        <button type="submit" className="primary">
-          Revisar dados
+        <button
+          type="submit"
+          className="primary"
+          disabled={submitting || activeMonitors.length === 0}
+        >
+          {submitting ? 'Salvando horário...' : 'Cadastrar horário'}
         </button>
       </div>
     </form>

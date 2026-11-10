@@ -1,27 +1,48 @@
+import { useCallback } from 'react';
 import { EmptyState } from '../../components/EmptyState/EmptyState';
 import { PageHeader } from '../../components/PageHeader/PageHeader';
 import { QueryResult } from '../../components/QueryResult/QueryResult';
 import { VacancyForm } from '../../components/VacancyForm/VacancyForm';
+import { useAuth } from '../../features/auth/AuthContext';
 import { loadSubjects } from '../../features/catalog/catalog.api';
+import { loadUsers } from '../../features/monitoring/monitoring.api';
 import { useQuery } from '../../shared/useQuery';
 
 export function NewVacancyPage() {
-  const query = useQuery(loadSubjects);
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
+
+  const loadData = useCallback(
+    async (signal: AbortSignal) => {
+      const [subjects, users] = await Promise.all([
+        loadSubjects(signal),
+        isAdmin ? loadUsers(signal) : Promise.resolve([]),
+      ]);
+      return {
+        subjects,
+        professors: users.filter((u) => u.role === 'PROFESSOR' && u.active),
+      };
+    },
+    [isAdmin],
+  );
+
+  const query = useQuery(loadData);
+
   return (
     <>
       <PageHeader
         title="Cadastrar vaga de monitoria"
-        description="Monte o rascunho de uma vaga usando as matérias reais do catálogo. O cadastro depende de integração futura."
+        description="Crie uma nova vaga vinculada a uma matéria do catálogo acadêmico."
       />
       <QueryResult state={query.state} retry={query.retry}>
-        {(subjects) =>
+        {({ subjects, professors }) =>
           subjects.length === 0 ? (
             <EmptyState
               title="Catálogo de matérias vazio"
-              description="Não há matérias disponíveis para vincular à vaga. O cadastro fica indisponível até que o catálogo seja preenchido."
+              description="Não há matérias disponíveis para vincular à vaga. Cadastre uma matéria na área de Administração antes de continuar."
             />
           ) : (
-            <VacancyForm subjects={subjects} />
+            <VacancyForm subjects={subjects} professors={professors} />
           )
         }
       </QueryResult>

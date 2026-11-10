@@ -37,25 +37,16 @@ export function VacancyDetails({ vacancy, subject }: Props) {
             className="primary"
             to={'/applications/new?vacancyId=' + vacancy.id}
           >
-            Preparar candidatura
+            Candidatar-se a esta vaga
           </Link>
         )}
-        <Link to="/office-hours">
-          Consultar horários de atendimento (em preparação)
+        <Link className="button-link" to="/office-hours">
+          Consultar horários de atendimento
         </Link>
       </div>
-      {isOpen ? (
-        <p className="notice">
-          A candidatura é preparada em uma tela de rascunho: o backend ainda não
-          oferece o envio nem o salvamento do pedido.
-        </p>
-      ) : (
+      {!isOpen && (
         <p className="muted">Esta vaga não está aberta para candidaturas.</p>
       )}
-      <p className="notice">
-        A consulta de horários (RF02) ainda depende de um endpoint próprio. A
-        tela de horários permite apenas preparar a disponibilidade (RF06).
-      </p>
     </article>
   );
 }

@@ -1,21 +1,27 @@
 import { useState, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../../features/auth/AuthContext';
 import type { Subject, Vacancy } from '../../features/catalog/catalog.types';
-import type { ApplicationDraft } from '../../features/monitoring/monitoring.types';
+import { createApplication } from '../../features/monitoring/monitoring.api';
 import {
-  displayOptional,
   formatVacancyLabel,
   isPositiveInteger,
   isScoreInRange,
 } from '../../features/monitoring/monitoring.rules';
-import { useDraftReview } from '../../features/monitoring/useDraftReview';
-import { DraftReview } from '../DraftReview/DraftReview';
+import type {
+  Application,
+  ApplicationDraft,
+  UserSummary,
+} from '../../features/monitoring/monitoring.types';
+import { errorMessage } from '../../shared/api/http';
 import { FormField } from '../FormField/FormField';
-import { IntegrationNotice } from '../IntegrationNotice/IntegrationNotice';
 
 type Props = {
   vacancies: Vacancy[];
   subjects: Subject[];
+  students?: UserSummary[];
   initialVacancyId?: number;
+  onCreated?: (application: Application) => void;
 };
 
 type Errors = Partial<Record<keyof ApplicationDraft, string>>;
@@ -31,19 +37,32 @@ const emptyDraft: ApplicationDraft = {
 export function ApplicationForm({
   vacancies,
   subjects,
+  students = [],
   initialVacancyId,
+  onCreated,
 }: Props) {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
   const [draft, setDraft] = useState<ApplicationDraft>({
     ...emptyDraft,
     vacancyId: initialVacancyId ? String(initialVacancyId) : '',
   });
   const [errors, setErrors] = useState<Errors>({});
-  const review = useDraftReview();
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [createdApplication, setCreatedApplication] =
+    useState<Application | null>(null);
 
   const subjectById = new Map(subjects.map((subject) => [subject.id, subject]));
+  const effectiveStudentId = isAdmin
+    ? draft.studentId
+    : user
+      ? String(user.id)
+      : '';
 
   function update(field: keyof ApplicationDraft, value: string) {
     setDraft((current) => ({ ...current, [field]: value }));
+    setSubmitError(null);
     setErrors((current) => {
       if (!current[field]) return current;
       const next = { ...current };
@@ -62,8 +81,8 @@ export function ApplicationForm({
     } else if (!selectedVacancy || selectedVacancy.status !== 'ABERTA') {
       next.vacancyId = 'Selecione uma vaga com status ABERTA.';
     }
-    if (!isPositiveInteger(values.studentId)) {
-      next.studentId = 'Informe um identificador de aluno inteiro positivo.';
+    if (!isPositiveInteger(effectiveStudentId)) {
+      next.studentId = 'Selecione o aluno candidato.';
     }
     if (
       values.subjectGrade.trim().length > 0 &&
@@ -78,86 +97,56 @@ export function ApplicationForm({
     return next;
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const next = validate(draft);
     setErrors(next);
-    if (Object.keys(next).length === 0) review.showReview();
-  }
+    if (Object.keys(next).length > 0) return;
 
-  if (review.reviewing) {
-    const selectedVacancy = vacancies.find(
-      (vacancy) => String(vacancy.id) === draft.vacancyId,
-    );
-    return (
-      <DraftReview
-        title="Revisar candidatura"
-        onEdit={review.editDraft}
-        sections={[
-          {
-            title: 'Candidatura',
-            fields: [
-              {
-                label: 'Vaga',
-                value: selectedVacancy
-                  ? formatVacancyLabel(
-                      selectedVacancy,
-                      subjectById.get(selectedVacancy.subjectId),
-                    )
-                  : 'Não selecionada',
-              },
-              {
-                label: 'ID do aluno candidato',
-                value: draft.studentId.trim(),
-              },
-              {
-                label: 'Nota da disciplina',
-                value: displayOptional(draft.subjectGrade, 'Não informada'),
-              },
-              { label: 'CR', value: displayOptional(draft.cr) },
-              {
-                label: 'Justificativa',
-                value: displayOptional(draft.justification, 'Não informada'),
-              },
-            ],
-          },
-          {
-            title: 'Vaga escolhida',
-            fields: [
-              {
-                label: 'Requisitos',
-                value:
-                  selectedVacancy?.requirements?.trim() || 'Não informados',
-              },
-              {
-                label: 'Descrição',
-                value: selectedVacancy?.description?.trim() || 'Não informada',
-              },
-            ],
-          },
-        ]}
-      />
-    );
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const created = await createApplication({
+        vagaId: Number(draft.vacancyId),
+        alunoId: Number(effectiveStudentId),
+        notaDisciplina: draft.subjectGrade.trim()
+          ? Number(draft.subjectGrade.trim())
+          : null,
+        cr: draft.cr.trim() ? Number(draft.cr.trim()) : null,
+        justificativa: draft.justification.trim() || null,
+      });
+      setCreatedApplication(created);
+      setDraft({
+        ...emptyDraft,
+        vacancyId: initialVacancyId ? String(initialVacancyId) : '',
+      });
+      onCreated?.(created);
+    } catch (error) {
+      setSubmitError(errorMessage(error));
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
     <form className="panel" onSubmit={handleSubmit} noValidate>
-      <h2 ref={review.formHeadingRef} tabIndex={-1}>
-        Dados da candidatura
-      </h2>
-      <IntegrationNotice>
-        <p>
-          A API disponível apenas consulta o catálogo acadêmico. Este formulário
-          monta um rascunho de candidatura; o envio depende de integração
-          futura.
+      <h2>Dados da candidatura</h2>
+      {submitError && (
+        <p className="notice error" role="alert">
+          {submitError}
         </p>
-      </IntegrationNotice>
-      <p className="muted">
-        Campos propostos: vaga, identificador do aluno, nota da disciplina, CR e
-        justificativa. Nota e CR são opcionais, entre 0 e 100; o identificador
-        do aluno é um dado de referência ao cadastro existente, não um login. O
-        status inicial previsto no esquema é PENDENTE e não é editável aqui.
-      </p>
+      )}
+      {createdApplication && (
+        <div className="notice success" role="status">
+          <strong>
+            Candidatura #{createdApplication.id} enviada com sucesso!
+          </strong>
+          <p>
+            Status inicial: {createdApplication.status}.{' '}
+            <Link to="/management">Acompanhar minhas candidaturas</Link>
+          </p>
+        </div>
+      )}
       <div className="form-grid">
         <FormField
           label="Vaga aberta (obrigatório)"
@@ -185,22 +174,42 @@ export function ApplicationForm({
             ))}
           </select>
         </FormField>
-        <FormField
-          label="ID do aluno candidato (obrigatório)"
-          error={errors.studentId}
-          hint="Referência ao aluno já cadastrado. Esta tela não autentica nem cria usuários."
-        >
-          <input
-            name="studentId"
-            type="number"
-            min="1"
-            step="1"
-            inputMode="numeric"
-            value={draft.studentId}
-            onChange={(event) => update('studentId', event.target.value)}
-            required
-          />
-        </FormField>
+        {isAdmin ? (
+          <FormField
+            label="Aluno candidato (obrigatório)"
+            error={errors.studentId}
+            hint="Selecione o aluno cadastrado para enviar a candidatura."
+          >
+            <select
+              name="studentId"
+              value={draft.studentId}
+              onChange={(event) => update('studentId', event.target.value)}
+              required
+            >
+              <option value="">Selecione um aluno</option>
+              {students.map((student) => (
+                <option key={student.id} value={student.id}>
+                  {student.name} ({student.registration || student.email})
+                </option>
+              ))}
+            </select>
+          </FormField>
+        ) : (
+          <FormField
+            label="Aluno candidato"
+            hint="Identificado automaticamente pela sua sessão autenticada."
+          >
+            <input
+              type="text"
+              value={
+                user
+                  ? `${user.name} (${user.registration || user.email})`
+                  : ''
+              }
+              disabled
+            />
+          </FormField>
+        )}
         <FormField
           label="Nota da disciplina (opcional)"
           error={errors.subjectGrade}
@@ -246,8 +255,8 @@ export function ApplicationForm({
         </FormField>
       </div>
       <div className="form-actions">
-        <button type="submit" className="primary">
-          Revisar dados
+        <button type="submit" className="primary" disabled={submitting}>
+          {submitting ? 'Enviando candidatura...' : 'Enviar candidatura'}
         </button>
       </div>
     </form>

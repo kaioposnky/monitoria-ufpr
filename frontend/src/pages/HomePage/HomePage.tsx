@@ -1,40 +1,65 @@
 import { Link } from 'react-router-dom';
 import { NavigationCard } from '../../components/NavigationCard/NavigationCard';
+import { useAuth } from '../../features/auth/AuthContext';
+
 export function HomePage() {
+  const { user } = useAuth();
+
   return (
     <>
       <section className="hero">
         <p className="eyebrow">UFPR · Ciências Exatas</p>
         <h1>Monitoria acadêmica em um só lugar.</h1>
         <p>
-          Encontre vagas por disciplina e consulte os requisitos. Prepare
-          candidaturas e informações de atendimento nas telas de rascunho.
+          Consulte vagas abertas por disciplina, envie sua candidatura, acompanhe
+          horários de atendimento e gerencie todo o programa de monitorias.
         </p>
-        <Link className="primary" to="/monitoring-vacancies">
-          Consultar vagas
-        </Link>
+        <div className="actions">
+          <Link className="primary" to="/monitoring-vacancies">
+            Consultar vagas
+          </Link>
+          {!user && (
+            <Link className="button-link" to="/login">
+              Entrar no sistema
+            </Link>
+          )}
+        </div>
       </section>
       <section aria-labelledby="student-title">
-        <h2 id="student-title">Para estudantes e monitores</h2>
+        <h2 id="student-title">Para estudantes, monitores e docentes</h2>
         <div className="grid">
           <NavigationCard
             to="/monitoring-vacancies"
             title="Vagas de monitoria"
             description="Consulte disciplinas, modalidades e requisitos."
-            status="Consulta integrada"
+            status="Público"
           />
           <NavigationCard
             to="/applications/new"
-            title="Preparar candidatura"
-            description="Preencha e revise os dados antes da futura integração."
-            status="Rascunho"
+            title="Enviar candidatura"
+            description="Candidate-se a uma vaga aberta com seu histórico."
+            status="ALUNO / ADMIN"
           />
           <NavigationCard
             to="/office-hours"
-            title="Horários e disponibilidade"
-            description="Prepare os dias, horários e locais de atendimento."
-            status="Rascunho"
+            title="Horários de atendimento"
+            description="Consulte a grade publicada ou gerencie seus horários."
+            status="Público / MONITOR"
           />
+          <NavigationCard
+            to="/management"
+            title="Gerenciamento"
+            description="Acompanhe candidaturas, vagas, monitores e atividades."
+            status="Autenticado"
+          />
+          {user?.role === 'ADMIN' && (
+            <NavigationCard
+              to="/admin"
+              title="Administração"
+              description="Gerencie cursos, matérias, vínculos e usuários."
+              status="ADMIN"
+            />
+          )}
         </div>
       </section>
       <section className="section" aria-labelledby="catalog-title">

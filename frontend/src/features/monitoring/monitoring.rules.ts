@@ -1,5 +1,10 @@
+import type { UserRole } from '../auth/auth.types';
 import type { Subject, Vacancy } from '../catalog/catalog.types';
 import type {
+  ActivityApprovalStatus,
+  ActivityType,
+  ApplicationStatus,
+  MonitorStatus,
   ReviewDecision,
   VacancyStatus,
   VacancyType,
@@ -32,8 +37,47 @@ export const REVIEW_DECISION_LABELS: Record<ReviewDecision, string> = {
   REPROVADO: 'Reprovado',
 };
 
+export const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
+  PENDENTE: 'Pendente',
+  EM_ANALISE: 'Em análise',
+  APROVADO: 'Aprovada',
+  REPROVADO: 'Reprovada',
+  DESISTENTE: 'Desistente',
+};
+
+export const MONITOR_STATUS_LABELS: Record<MonitorStatus, string> = {
+  ATIVO: 'Ativo',
+  INATIVO: 'Inativo',
+  DESLIGADO: 'Desligado',
+  CONCLUIDO: 'Concluído',
+};
+
+export const ACTIVITY_TYPE_LABELS: Record<ActivityType, string> = {
+  ATENDIMENTO_DUVIDAS: 'Atendimento de dúvidas',
+  PREPARACAO_MATERIAL: 'Preparação de material',
+  AUXILIO_AULA_PRATICA: 'Auxílio em aula prática',
+  CORRECAO_EXERCICIOS: 'Correção de exercícios',
+  OUTRO: 'Outro',
+};
+
+export const ACTIVITY_APPROVAL_LABELS: Record<ActivityApprovalStatus, string> = {
+  PENDENTE: 'Pendente',
+  APROVADO: 'Aprovado',
+  REJEITADO: 'Rejeitado',
+};
+
+export const USER_ROLE_LABELS: Record<UserRole, string> = {
+  ALUNO: 'Aluno',
+  PROFESSOR: 'Professor',
+  ADMIN: 'Administrador',
+};
+
 export function isPositiveInteger(value: string): boolean {
   return /^[1-9]\d*$/.test(value.trim());
+}
+
+export function isNonNegativeInteger(value: string): boolean {
+  return /^\d+$/.test(value.trim());
 }
 
 export function isScoreInRange(value: string): boolean {
@@ -62,6 +106,10 @@ export function isHttpUrl(value: string): boolean {
   } catch {
     return false;
   }
+}
+
+export function formatTimeShort(value: string): string {
+  return value.length >= 5 ? value.slice(0, 5) : value;
 }
 
 export function displayOptional(

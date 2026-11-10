@@ -1,25 +1,39 @@
+import { useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ApplicationForm } from '../../components/ApplicationForm/ApplicationForm';
 import { EmptyState } from '../../components/EmptyState/EmptyState';
 import { PageHeader } from '../../components/PageHeader/PageHeader';
 import { QueryResult } from '../../components/QueryResult/QueryResult';
+import { useAuth } from '../../features/auth/AuthContext';
 import {
   loadSubjects,
   loadVacancies,
 } from '../../features/catalog/catalog.api';
+import { loadUsers } from '../../features/monitoring/monitoring.api';
 import { VACANCY_STATUS_LABELS } from '../../features/monitoring/monitoring.rules';
 import type { VacancyStatus } from '../../features/monitoring/monitoring.types';
 import { useQuery } from '../../shared/useQuery';
 
-async function loadApplicationCatalog(signal: AbortSignal) {
-  const [vacancies, subjects] = await Promise.all([
-    loadVacancies(signal),
-    loadSubjects(signal),
-  ]);
-  return { vacancies, subjects };
-}
-
 export function ApplicationPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
+
+  const loadApplicationCatalog = useCallback(
+    async (signal: AbortSignal) => {
+      const [vacancies, subjects, users] = await Promise.all([
+        loadVacancies(signal),
+        loadSubjects(signal),
+        isAdmin ? loadUsers(signal) : Promise.resolve([]),
+      ]);
+      return {
+        vacancies,
+        subjects,
+        students: users.filter((u) => u.role === 'ALUNO' && u.active),
+      };
+    },
+    [isAdmin],
+  );
+
   const query = useQuery(loadApplicationCatalog);
   const [searchParams, setSearchParams] = useSearchParams();
   const rawVacancyId =
@@ -37,10 +51,10 @@ export function ApplicationPage() {
     <>
       <PageHeader
         title="Candidatura a monitoria"
-        description="Escolha uma vaga aberta do catálogo e monte um rascunho de candidatura. O envio depende de integração futura."
+        description="Escolha uma vaga aberta do catálogo e envie sua candidatura diretamente para análise."
       />
       <QueryResult state={query.state} retry={query.retry}>
-        {({ vacancies, subjects }) => {
+        {({ vacancies, subjects, students }) => {
           const openVacancies = vacancies.filter(
             (vacancy) => vacancy.status === 'ABERTA',
           );
@@ -110,6 +124,7 @@ export function ApplicationPage() {
               key={requestedVacancyId ?? 'sem-vaga'}
               vacancies={openVacancies}
               subjects={subjects}
+              students={students}
               initialVacancyId={requestedVacancyId}
             />
           );
