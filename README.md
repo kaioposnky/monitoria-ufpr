@@ -1,62 +1,109 @@
 # Sistema de Monitoria
 
-Projeto acadêmico de Design e Arquitetura de Software para propor uma solução de gerenciamento de monitorias acadêmicas. Este repositório será preenchido pelo grupo ao longo do trabalho; os itens abaixo são um rascunho inicial, não uma especificação final.
+Projeto da disciplina de Design e Arquitetura de Software: um sistema web para organizar as monitorias do Setor de Ciências Exatas da UFPR. O sistema completo está em planejamento; as funcionalidades disponíveis estão descritas em "Estado do protótipo".
 
-## Escopo 
-Exatas UFPR
+## Contexto, escopo e stakeholders
 
-## Premissas iniciais — propostas pelo grupo, ainda a validar
+O sistema reúne as informações de monitoria que os alunos precisam no dia a dia: disciplina, monitor, horário e local de atendimento. Os monitores publicam seus horários e os professores organizam as monitorias, abrem vagas e selecionam os alunos que vão atuar como monitores. O acesso é pelo navegador, tanto no computador quanto no celular.
 
-- Volume estimado: aproximadamente **100 monitorias por semestre**.
-- Estimativa de ocupação: **30 alunos por monitoria/sala**, cerca de 3.000 participações no semestre. A transcrição também menciona “3.000 simultâneos”, mas isso precisa ser esclarecido: usuários simultâneos e requisições por segundo são métricas diferentes.
-- Meta de desempenho mencionada: até **50 requisições por segundo**. Confirmar se é requisito, pico esperado ou apenas estimativa, e definir como será verificada.
-- Backend: monólito Spring Boot organizado em camadas e exposto por API REST.
-- Frontend separado: SPA com **Vite + React + TypeScript**, organizada por funcionalidade. A apresentação usa componentes, não MVC clássico.
-- A interface deve seguir a identidade visual/design da UFPR; o grupo não busca uma interface visual sofisticada. Detalhar os critérios visuais depois.
-- A solução deve ser simples e rápida de implementar por uma equipe pequena, evitando complexidade sem justificativa.
+Para este trabalho, consideramos cerca de 100 monitorias e 3.000 participações por semestre no Setor de Ciências Exatas. Como um aluno pode participar de mais de uma monitoria, esse total não corresponde necessariamente a 3.000 pessoas. No dimensionamento, adotamos um cenário mais exigente, com até 3.000 alunos e concentração de consultas nos dias anteriores às provas. Esses números são premissas do projeto acadêmico, sem levantamento de campo ou medição de tráfego da UFPR.
+
+### Atores e interesses
+
+| Ator ou stakeholder | Responsabilidades e interesses |
+| --- | --- |
+| Aluno | Consultar monitorias, monitores, horários e locais; consultar vagas e acompanhar suas próprias candidaturas para atuar como monitor. |
+| Monitor | Publicar e atualizar horários e locais de atendimento das monitorias às quais está vinculado; manter informações de atendimento acessíveis aos alunos. Também pode exercer as ações de aluno. |
+| Professor responsável | Criar e manter suas monitorias, gerenciar vagas, avaliar candidaturas e designar monitores para disciplinas sob sua responsabilidade. |
+| Setor de Ciências Exatas / coordenações | Acompanhar a organização e a divulgação da oferta de monitorias. O escopo não inclui um perfil administrativo próprio para esses setores. |
+| Equipe de desenvolvimento | Desenvolver e manter o sistema com uma estrutura que uma equipe pequena consiga entender e operar. |
+
+Para receber atendimento, o aluno consulta os horários e comparece ao local. Não há agendamento ou reserva. Já a candidatura a uma vaga é destinada ao aluno que quer trabalhar como monitor.
 
 ## Requisitos
 
-> Rascunho baseado nas instruções recebidas. Confirmar ambiguidades, priorizar e transformar os requisitos em critérios de aceitação verificáveis. A entrega pede entre 6 e 10 requisitos funcionais.
+O escopo está dividido em gestão de monitorias, horários e vagas. Os requisitos incluem funcionalidades ainda não implementadas.
 
-### Contexto e atores
+### Requisitos funcionais
 
-- **Contexto:** apoiar a organização e o acesso a monitorias acadêmicas, incluindo disciplinas como matemática, escrita e cálculo (exemplos citados no áudio; confirmar).
-- **Atores mencionados ou inferidos da conversa:** estudante, monitor e professor responsável. Validar os papéis e responsabilidades com o grupo.
-
-### Requisitos funcionais — rascunho
-
-- [ ] **RF01 — Consultar monitorias:** permitir que estudantes encontrem monitorias por disciplina/matéria.
-- [ ] **RF02 — Consultar horários:** apresentar dias e horários de atendimento e a disponibilidade informada para cada monitoria.
-- [ ] **RF03 — Candidatar-se/participar:** definir e oferecer o fluxo para o estudante solicitar ou acessar uma monitoria. A transcrição não deixa claro se o aluno se inscreve previamente ou apenas comparece; confirmar.
-- [ ] **RF04 — Cadastrar monitoria:** permitir o cadastro das informações necessárias da monitoria, como matéria, monitor e horários; definir quem pode cadastrar.
-- [ ] **RF05 — Validar monitor:** permitir que o professor responsável valide/aprove monitores e sua relação com a matéria. O trecho transcrito como “pelo salário” é ambíguo; foi interpretado provisoriamente como validação pela matéria/disciplina.
-- [ ] **RF06 — Informar disponibilidade:** permitir registrar/atualizar os dias e horários ocupados ou disponíveis do monitor, evitando oferecer horários indisponíveis.
+| ID | Requisito | Responsável e comportamento esperado |
+| --- | --- | --- |
+| RF01 | Gerenciar monitorias | Professor cria, consulta, atualiza e encerra monitorias sob sua responsabilidade, associadas a disciplinas. |
+| RF02 | Gerenciar designações de monitores | Professor vincula e desvincula monitores às monitorias de suas disciplinas; a designação determina quais monitorias cada monitor pode gerenciar. |
+| RF03 | Consultar monitorias e monitores | Aluno consulta monitorias por disciplina e visualiza os respectivos monitores responsáveis pelo atendimento. |
+| RF04 | Gerenciar horários e locais | Monitor cadastra, consulta, altera e remove horários e locais de atendimento apenas das monitorias às quais está vinculado; professor responsável também pode gerenciá-los. |
+| RF05 | Consultar horários e locais | Aluno visualiza os horários publicados e os locais de atendimento, inclusive pelo celular, sem precisar reservar um horário. |
+| RF06 | Gerenciar vagas de monitoria | Professor cria, consulta, atualiza e exclui vagas para atuar como monitor em suas monitorias; aluno consulta as vagas ofertadas. |
+| RF07 | Gerenciar candidaturas próprias | Aluno registra, consulta e cancela sua candidatura a uma vaga de monitoria. |
+| RF08 | Selecionar candidatos | Professor consulta e avalia candidaturas de suas vagas e registra o resultado da seleção; aluno consulta o resultado de sua própria candidatura. A vinculação do selecionado à monitoria é tratada pelo RF02. |
 
 ### Restrições e requisitos de qualidade
 
-- [ ] **Compatibilidade de interface — desktop e mobile:** a interface web deve permitir o uso das funcionalidades do sistema em navegadores de computadores e smartphones, adaptando o layout ao tamanho da tela sem perda de conteúdo ou de acesso às ações. A verificação deve cobrir os fluxos em ambos os formatos; definir as larguras de tela e os navegadores de referência.
-- [ ] **Desempenho:** validar a meta inicial de até 50 requisições por segundo e esclarecer a estimativa de 3.000 usuários simultâneos; definir cenário e critério de teste.
-- [ ] **Simplicidade:** favorecer implementação e manutenção por equipe pequena; evitar complexidade arquitetural não justificada.
-- [ ] **Comunicação:** manter clara a comunicação entre frontend e backend via API REST.
-- [ ] Descrever três requisitos arquiteturalmente significativos (ASRs) concretos e explicar como influenciam as decisões.
-- [ ] Identificar requisitos pertinentes de segurança, disponibilidade, modificabilidade e testabilidade.
+| ID | Requisito | Critério ou orientação de verificação |
+| --- | --- | --- |
+| RQ01 | Responsividade e acesso web | Consultas e operações autorizadas devem permanecer acessíveis em desktop e mobile, sem conteúdo cortado nem ações inacessíveis. Demonstrar os fluxos em larguras de referência de 360 px e 1280 px, verificando também a adaptação entre elas. |
+| RQ02 | Segurança por papel e vínculo | Distinguir aluno, monitor e professor. O backend deve negar operações sem permissão: aluno altera somente suas candidaturas; monitor altera horários somente de suas monitorias; professor gerencia somente monitorias, vagas, candidaturas recebidas e designações sob sua responsabilidade. Ocultar botões não substitui autorização no backend. Verificar tentativas com papel incorreto e acesso a recursos de terceiros. |
+| RQ03 | Desempenho de consultas | Atender ao cenário estimado de 100 requisições GET/s de alunos consultando monitorias, monitores e horários nas semanas de provas. Verificar com teste de carga, registrando a distribuição das consultas, a duração, a latência e os erros. A capacidade ainda precisa ser medida; o limite aceitável de latência está em aberto. |
+| RQ04 | Simplicidade | Usar um único backend Spring Boot, monolítico e organizado em camadas, com responsabilidades claras para apresentação, controle e domínio. A equipe deve conseguir localizar regras, testar e executar o projeto sem precisar operar serviços distribuídos. |
+| RQ05 | Comunicação explícita | Frontend e backend trocam HTTP/JSON por uma API documentada com OpenAPI/Swagger, com contratos e respostas de erro compreensíveis. |
+| RQ06 | Modificabilidade, testabilidade e disponibilidade | Separar apresentação, regras e persistência para facilitar alterações e testar regras e permissões sem depender da interface. Mostrar falhas de consulta ao usuário, em vez de exibir uma lista vazia. O projeto não prevê redundância nem uma meta numérica de disponibilidade. |
 
-## ADR
+### ASRs selecionados e dimensionamento
 
-Registrar pelo menos três decisões arquiteturais. Para cada ADR, documentar contexto, problema/forças, alternativas, decisão e consequências positivas e negativas.
+Escolhemos três requisitos arquiteturalmente significativos: desempenho (RQ03), segurança (RQ02) e simplicidade (RQ04). Eles orientam os ADRs a seguir. Modificabilidade, testabilidade e disponibilidade também entram na avaliação das decisões, como requisitos complementares.
 
-- [ ] ADR 001 — Organização arquitetural (rascunho: monólito em camadas com MVC).
-- [ ] ADR 002 — Persistência e acesso a dados.
-- [ ] ADR 003 — A definir conforme as decisões arquiteturais efetivamente adotadas; sem pressupor integração externa.
+A estimativa de 100 GET/s considera 3.000 alunos fazendo duas requisições cada em um intervalo de 60 segundos: 3.000 × 2 / 60 = 100 GET/s. É um cenário de estresse assumido pelo grupo, ainda sem validação por teste. O valor representa a média nesse minuto; picos menores que um minuto podem ser maiores. Os slides devem detalhar o cálculo e discutir a concentração de acessos adotada, diferenciando número de alunos de participações em monitorias.
+
+## Decisões arquiteturais (ADRs)
+
+As decisões se aplicam ao sistema proposto. O status de cada ADR indica o que já existe e o que ainda precisa ser implementado ou validado.
+
+### ADR 001: backend monolítico em camadas e frontend separado
+
+- Status: adotada para a proposta.
+- Contexto e forças: o escopo e o tamanho da equipe favorecem uma solução simples (RQ04), que permita alterar e testar partes do sistema separadamente (RQ06).
+- Alternativas: monólito em camadas, serviços de negócio separados ou microsserviços com implantação e dados distribuídos.
+- Decisão: manter um backend Spring Boot com controllers, serviços de aplicação/domínio e repositórios. O frontend React cuida da apresentação. As regras de negócio ficam no backend, sem servidores adicionais para essa função.
+- Relação com MVC: podemos associar a apresentação em React à View, os controllers HTTP ao Controller e o domínio, as regras e o acesso aos dados ao Model. O Model inclui mais que o banco. Como o React mantém estado e lógica de interface e recebe JSON da API, essa organização difere do MVC clássico, em que o Spring renderiza as views. A arquitetura é cliente-servidor, com backend monolítico em camadas e frontend separado.
+- Consequências positivas: menos infraestrutura para executar e depurar, regras centralizadas e testes separados por responsabilidade.
+- Custos e riscos: o backend precisa ser implantado e escalado como uma unidade. A equipe deve cuidar das dependências entre camadas e manter os contratos usados pelo frontend.
+
+### ADR 002: PostgreSQL e persistência relacional
+
+- Status: adotada. O perfil padrão usa PostgreSQL; desenvolvimento e testes usam H2 conforme a configuração existente.
+- Contexto e forças: disciplinas, monitorias, usuários, vagas e candidaturas têm relações que precisam permanecer consistentes. A escolha também considera simplicidade (RQ04) e testes de persistência (RQ06).
+- Alternativas: PostgreSQL compartilhado pelo monólito, banco documental ou bancos separados por serviço.
+- Decisão: usar PostgreSQL, repositórios JPA e migrações Flyway. H2 facilita a execução local; comportamentos específicos do PostgreSQL precisam ser verificados no próprio PostgreSQL.
+- Consequências positivas: suporte a transações e restrições relacionais, integração com Spring e apenas um banco para administrar.
+- Custos e riscos: uma falha no banco afeta a aplicação, e mudanças de schema exigem migrações. Mesmo com JPA, trocar o SGBD pode exigir ajustes em tipos, SQL, migrações e testes.
+
+### ADR 003: cache para consultas de monitorias e horários
+
+- Status: estratégia escolhida para a proposta. A política de cache e a capacidade de atendimento ainda precisam ser verificadas.
+- Contexto e forças: o cenário de desempenho (RQ03) prevê 100 GET/s de alunos nas semanas de provas, com muitas consultas às mesmas monitorias e horários.
+- Alternativas: acessar o banco em toda consulta, usar cache no backend ou usar cache HTTP na borda para respostas públicas.
+- Decisão: priorizar cache no backend para consultas compartilháveis de monitorias, monitores e horários. PostgreSQL continua sendo a fonte dos dados. Ao alterar uma monitoria, designação ou horário, o sistema deve invalidar as entradas afetadas. Candidaturas, resultados individuais e dados privados ficam fora do cache compartilhado. A escolha da ferramenta de cache permanece em aberto.
+- Consequências positivas: menos leituras repetidas no banco e possibilidade de atender à concentração de consultas mantendo o monólito.
+- Custos e riscos: dados podem ficar desatualizados se a invalidação falhar. Com cache vazio ou indisponível, as consultas voltam ao banco. O teste de carga deve cobrir cache frio e aquecido para avaliar se a estratégia atende ao cenário e quanto ela melhora o desempenho.
+
+### ADR 004: autorização por papel e vínculo com a monitoria
+
+- Status: adotada para a proposta, ainda não implementada no protótipo.
+- Contexto e forças: a segurança (RQ02) exige impedir que um usuário altere recursos de outra pessoa, mesmo conhecendo seus identificadores.
+- Alternativas: restringir apenas a interface, verificar apenas o papel do usuário ou verificar papel e vínculo no backend.
+- Decisão: verificar a identidade, o papel e o vínculo com o recurso em cada operação protegida no backend. A interface mostra as ações permitidas para facilitar o uso. O mecanismo de autenticação ainda será detalhado; o projeto não pressupõe login institucional.
+- Consequências positivas: as permissões também se aplicam a chamadas diretas à API e podem ser testadas por papel e por recurso.
+- Custos e riscos: todas as operações de escrita e consultas privadas precisam verificar as permissões com base em uma identidade autenticada. HTTPS protege o transporte dos dados; o controle de acesso continua sendo responsabilidade da aplicação.
 
 ## Tecnologias
 
-- **Backend:** Java + Spring Boot (proposta inicial). - Maven - flaway para gerenciar banco dedados.
-- **Frontend:** Vite + React + TypeScript + React Router; npm, ESM e Vitest.
-- **Persistência/banco de dados:** a definir.
-- **Testes e documentação da API:** a definir.
-- **Ferramentas de diagramas:** a definir.
+- Backend: Java e Spring Boot, com Maven para build e dependências e Flyway para migrações.
+- Frontend: Vite, React, TypeScript e React Router; npm, ESM e Vitest.
+- Persistência: PostgreSQL e H2 nos perfis de desenvolvimento e teste existentes.
+- API: OpenAPI e Swagger UI para documentação e chamadas manuais. Os testes automatizados de regras, integração e autorização são feitos separadamente.
+- Testes: infraestrutura do Spring Boot no backend e Vitest no frontend.
+- Diagramas: Mermaid para os diagramas suportados e Excalidraw para edição visual complementar. Os modelos devem acompanhar os requisitos e o código.
+- Infraestrutura opcional: Cloudflare para proxy, HTTPS e métricas de tráfego HTTP se houver publicação com domínio. A execução local independe dele.
 
 ## Executar backend e frontend
 
@@ -146,29 +193,29 @@ continua usando H2 em memória e desativa o Flyway e o Redis.
 
 ## Organização da apresentação
 
-O frontend foi migrado de NestJS SSR para Vite + React + TypeScript. A escolha
-prioriza a simplicidade para uma equipe pequena: o Spring permanece como único
-backend e responsável pelas regras de negócio e persistência. Não há requisito
-confirmado de SEO ou renderização no servidor que justifique outro servidor Node.
+O frontend usa Vite, React e TypeScript. Na migração do NestJS SSR, mantivemos o
+Spring como único backend, responsável pelas regras de negócio e pela persistência.
+A equipe tem menos um servidor para manter. SEO e renderização no servidor não
+são requisitos confirmados do projeto.
 
 `app` compõe as rotas; `pages` separa cada página em sua pasta; `components` mantém
 um componente por pasta com funções exportadas e props no próprio TSX.
 `features/catalog` concentra contratos e chamadas; `shared/api` centraliza HTTP;
-`shared/useQuery` coordena carregamento, erro e cancelamento. A separação favorece
-SRP, alta coesão e baixo acoplamento sem serviços de simples repasse.
+`shared/useQuery` coordena carregamento, erro e cancelamento. Cada parte concentra
+uma responsabilidade, seguindo SRP e evitando serviços que apenas repassam chamadas.
 
-Trade-off: o navegador precisa de JavaScript e a hospedagem deve encaminhar rotas
-da SPA para `index.html`. Uma SPA não traz SSR/SEO por padrão. Next.js e manter
-NestJS SSR foram descartados nesta migração por adicionarem conceitos e runtime
-de servidor sem uma necessidade atual demonstrada.
+Essa escolha exige JavaScript no navegador e configuração da hospedagem para
+encaminhar as rotas da SPA a `index.html`. A SPA não oferece SSR ou SEO por padrão.
+Next.js e NestJS SSR acrescentariam um runtime de servidor sem atender a uma
+necessidade atual do projeto, por isso foram descartados na migração.
 
-## Porque não Arquitetura de Serviços?
+## Por que não arquitetura orientada a serviços?
 
-A preencher: definir o que o grupo entende por “Arquitetura de Serviços”, comparar alternativas e justificar a decisão com base nos requisitos, complexidade, implantação e evolução.
+Consideramos aqui serviços de negócio com execução própria e comunicação pela rede. Para o escopo atual, isso exigiria manter contratos remotos e lidar com falhas de comunicação, além de operar vários serviços. Preferimos separar as responsabilidades dentro do monólito, que demanda menos infraestrutura da equipe (ADR 001).
 
-## Porque não Microsserviços?
+## Por que não microsserviços?
 
-A preencher: comparar com a proposta de monólito, considerando tamanho da equipe, complexidade operacional, implantação, escalabilidade e necessidades reais de evolução.
+A equipe não precisa implantar cada domínio de forma independente nem dividir o trabalho entre equipes autônomas. Microsserviços exigiriam configuração e observabilidade distribuídas, além de cuidados com a consistência entre serviços. Para avaliar o pico de consultas, vamos primeiro medir o monólito e o efeito do cache (ADRs 001 e 003).
 
 ## Comunicação
 
@@ -177,13 +224,17 @@ do Vite mantém as chamadas na mesma origem. Em produção, publicar os arquivos
 estáticos de `frontend/dist` e encaminhar `/api` ao Spring. O proxy do Vite não
 faz parte do bundle. Contratos TypeScript ficam em `features/catalog/catalog.types.ts`.
 
-## Trade Offs da arquitetura escolhida
+Se houver publicação, podemos usar Cloudflare para proxy HTTP, HTTPS e métricas de tráfego, conforme a configuração e o plano. As métricas HTTP dependem de o tráfego passar pelo proxy; configurar apenas o DNS não basta, como explica a [documentação de proxy da Cloudflare](https://developers.cloudflare.com/dns/proxy-status/). Latência interna, banco e erros do backend precisam ser observados na aplicação. Por enquanto, não prevemos outra plataforma de observabilidade para o protótipo.
 
-A preencher: registrar benefícios, custos, riscos e limitações da arquitetura escolhida e relacioná-los aos ASRs. Considerar modificabilidade, desempenho, disponibilidade, testabilidade, complexidade, implantação, escalabilidade e custo.
+## Benefícios e limitações da arquitetura
+
+O monólito simplifica a implantação e a depuração. Em contrapartida, uma falha pode afetar todo o backend, e sua escala é feita em conjunto. As camadas ajudam a alterar e testar o código, desde que as regras permaneçam nos lugares definidos, sem se espalhar pelos controllers e pela interface.
+
+PostgreSQL mantém as relações consistentes, mas exige administrar schema e migrações. O cache reduz trabalho repetido e traz o risco de exibir horários desatualizados. Já a autorização precisa ser aplicada e testada em cada caminho protegido. A capacidade de atender ao pico e a disponibilidade ainda precisam de medição.
 
 ## Abstração de componentes
 
-A preencher: identificar os principais componentes/módulos, responsabilidades, interfaces e dependências; mostrar como a persistência e as integrações podem ser substituídas sem afetar partes não relacionadas.
+Pendente: descrever os módulos, suas responsabilidades e interfaces, incluindo quais dependências permitem substituir a persistência ou uma integração sem alterar o restante do sistema.
 
 ## Diagramas
 
@@ -202,31 +253,33 @@ persistência. A consulta de horários ainda depende de endpoint e é indicada c
 indisponível. Veja o mapa de requisitos e limites em [frontend/docs/CONTINUIDADE.md](frontend/docs/CONTINUIDADE.md)
 e as decisões para análise do grupo em [frontend/docs/DECISOES.md](frontend/docs/DECISOES.md).
 
-A fatia vertical da disciplina ainda precisa de escrita real com persistência,
-consulta, erro relevante e dependência externa substituível. Rascunhos de frontend
-não demonstram candidatura persistida, aprovação, autenticação ou autorização.
+Para completar a fatia vertical exigida pela disciplina, ainda falta demonstrar
+uma operação de escrita persistida, acompanhada de consulta, um erro relevante e
+uma dependência externa substituível. Os rascunhos da interface ainda não executam
+candidatura persistida, aprovação, autenticação ou autorização.
 
 ## Evolução
 
-A preencher: analisar pelo menos duas mudanças possíveis e explicar quais partes seriam afetadas e quais permaneceriam estáveis.
+Pendente: escolher pelo menos duas mudanças possíveis e analisar quais partes do sistema seriam alteradas e quais poderiam ser mantidas.
 
 
 ## Escolhas
-- Backend monolítico em camadas; frontend React por funcionalidade.
-- API REST com contrato explícito entre frontend e backend; REST não elimina acoplamento.
-- Banco de dados relacional ACID postgres
-- Usar Swagger para mapear apis
+- Backend monolítico em camadas e frontend React separado.
+- API HTTP/JSON com contratos explícitos entre frontend e backend.
+- PostgreSQL, JPA e migrações Flyway.
+- OpenAPI/Swagger para documentar a API e fazer chamadas manuais, junto dos testes automatizados.
+- Cache de consultas e autorização por papel e vínculo previstos para o sistema, ainda sem demonstração no protótipo.
 
-documentação estará disponível em:
-- **Swagger UI:** `http://localhost:8080/swagger-ui.html`
+Endereços da documentação da API:
+- Swagger UI: `http://localhost:8080/swagger-ui.html`
 
-- **OpenAPI JSON:** `http://localhost:8080/v3/api-docs`
+- OpenAPI JSON: `http://localhost:8080/v3/api-docs`
 
 ## Backend REST
 
-O backend atual implementa catálogo em `catalog`, com controller, serviço,
-repositórios JPA, entidades e DTOs. PostgreSQL é usado no perfil padrão e H2 no
-perfil `dev`; migrations são gerenciadas pelo Flyway.
+O catálogo está no módulo `catalog`, com controller, serviço, repositórios JPA,
+entidades e DTOs. O perfil padrão usa PostgreSQL e o perfil `dev` usa H2.
+O Flyway gerencia as migrações.
 
 Endpoints implementados, todos de leitura:
 
@@ -235,5 +288,5 @@ Endpoints implementados, todos de leitura:
 - `GET /api/v1/course-subjects`, com filtro opcional `courseId`;
 - `GET /api/v1/monitoring-vacancies` e `GET /api/v1/monitoring-vacancies/{id}`.
 
-A existência de tabelas para usuários, candidaturas, monitores, horários e atividades
-não representa endpoints implementados. Não há escrita disponível no controller atual.
+O controller atual só oferece leitura. As tabelas de usuários, candidaturas,
+monitores, horários e atividades já existem, mas ainda não têm endpoints correspondentes.
