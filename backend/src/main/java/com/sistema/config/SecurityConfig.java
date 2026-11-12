@@ -61,7 +61,8 @@ public class SecurityConfig {
                                 "/api/v1/materias/**",
                                 "/api/v1/cursos-materias/**",
                                 "/api/v1/vagas-monitoria/**",
-                                "/api/v1/horarios-atendimento/**").permitAll()
+                                "/api/v1/horarios-atendimento/**",
+                                "/api/v1/agenda/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

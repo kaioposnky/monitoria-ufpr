@@ -9,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 
 @Entity
@@ -52,6 +53,12 @@ public class VagaMonitoria {
     @Column(nullable = false, length = 20)
     private StatusVaga status = StatusVaga.ABERTA;
 
+    @Column(name = "data_abertura")
+    private LocalDate dataAbertura;
+
+    @Column(name = "data_encerramento")
+    private LocalDate dataEncerramento;
+
     @Column(name = "criado_em", insertable = false, updatable = false)
     private OffsetDateTime criadoEm;
 
@@ -60,6 +67,12 @@ public class VagaMonitoria {
 
     public VagaMonitoria(Long materiaId, Long professorId, String semestre, Integer quantidadeVagas,
                          TipoVaga tipoVaga, String requisitos, String descricao) {
+        this(materiaId, professorId, semestre, quantidadeVagas, tipoVaga, requisitos, descricao, null, null);
+    }
+
+    public VagaMonitoria(Long materiaId, Long professorId, String semestre, Integer quantidadeVagas,
+                         TipoVaga tipoVaga, String requisitos, String descricao,
+                         LocalDate dataAbertura, LocalDate dataEncerramento) {
         this.materiaId = materiaId;
         this.professorId = professorId;
         this.semestre = semestre;
@@ -67,6 +80,8 @@ public class VagaMonitoria {
         this.tipoVaga = tipoVaga;
         this.requisitos = requisitos;
         this.descricao = descricao;
+        this.dataAbertura = dataAbertura;
+        this.dataEncerramento = dataEncerramento;
     }
 
     public Long getId() { return id; }
@@ -78,15 +93,26 @@ public class VagaMonitoria {
     public String getRequisitos() { return requisitos; }
     public String getDescricao() { return descricao; }
     public StatusVaga getStatus() { return status; }
+    public LocalDate getDataAbertura() { return dataAbertura; }
+    public LocalDate getDataEncerramento() { return dataEncerramento; }
     public OffsetDateTime getCriadoEm() { return criadoEm; }
 
     public void atualizar(String semestre, Integer quantidadeVagas, TipoVaga tipoVaga,
                            String requisitos, String descricao, StatusVaga status) {
+        atualizar(semestre, quantidadeVagas, tipoVaga, requisitos, descricao, status,
+                this.dataAbertura, this.dataEncerramento);
+    }
+
+    public void atualizar(String semestre, Integer quantidadeVagas, TipoVaga tipoVaga,
+                           String requisitos, String descricao, StatusVaga status,
+                           LocalDate dataAbertura, LocalDate dataEncerramento) {
         this.semestre = semestre;
         this.quantidadeVagas = quantidadeVagas;
         this.tipoVaga = tipoVaga;
         this.requisitos = requisitos;
         this.descricao = descricao;
         this.status = status;
+        this.dataAbertura = dataAbertura;
+        this.dataEncerramento = dataEncerramento;
     }
 }

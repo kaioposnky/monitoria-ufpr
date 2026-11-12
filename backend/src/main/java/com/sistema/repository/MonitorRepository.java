@@ -7,4 +7,5 @@ public interface MonitorRepository extends JpaRepository<Monitor, Long> {
     List<Monitor> findByAlunoId(Long alunoId);
     boolean existsByVagaIdAndAlunoId(Long vagaId, Long alunoId);
     boolean existsByAlunoIdAndStatus(Long alunoId, Monitor.StatusMonitor status);
+    long countByVagaIdAndStatus(Long vagaId, Monitor.StatusMonitor status);
 }
