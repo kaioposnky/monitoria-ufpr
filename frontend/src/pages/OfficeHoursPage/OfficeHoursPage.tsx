@@ -11,18 +11,20 @@ import {
 } from '../../features/catalog/catalog.api';
 import {
   deleteOfficeHours,
+  loadAgendaEvents,
   loadMonitors,
   loadMonitorsByStudent,
   loadOfficeHours,
   loadUsers,
 } from '../../features/monitoring/monitoring.api';
 import {
+  formatDateBr,
   formatSubjectLabel,
   formatTimeShort,
   WEEKDAY_LABELS,
 } from '../../features/monitoring/monitoring.rules';
 import type { MonitorRecord } from '../../features/monitoring/monitoring.types';
-import { errorMessage } from '../../shared/api/http';
+import { apiUrl, errorMessage } from '../../shared/api/http';
 import { useQuery } from '../../shared/useQuery';
 
 export function OfficeHoursPage() {
@@ -39,9 +41,10 @@ export function OfficeHoursPage() {
 
   const loadData = useCallback(
     async (signal: AbortSignal) => {
-      const [officeHours, vacancies, subjects, monitors, users] =
+      const [officeHours, agendaEvents, vacancies, subjects, monitors, users] =
         await Promise.all([
           loadOfficeHours(signal),
+          loadAgendaEvents(signal),
           loadVacancies(signal),
           loadSubjects(signal),
           user
@@ -51,7 +54,7 @@ export function OfficeHoursPage() {
             : Promise.resolve([]),
           canReadUsers ? loadUsers(signal) : Promise.resolve([]),
         ]);
-      return { officeHours, vacancies, subjects, monitors, users };
+      return { officeHours, agendaEvents, vacancies, subjects, monitors, users };
     },
     [user, canReadUsers],
   );
@@ -76,14 +79,22 @@ export function OfficeHoursPage() {
       <PageHeader
         title="Horários de atendimento"
         description="Consulte os horários publicados pelos monitores e, se você for monitor ativo, professor ou administrador, gerencie os atendimentos."
-      />
+      >
+        <a
+          className="button-link"
+          href={apiUrl('/agenda/calendario.ics')}
+          download="monitoria-ufpr.ics"
+        >
+          Exportar calendário (.ics)
+        </a>
+      </PageHeader>
       {actionError && (
         <p className="notice error" role="alert">
           {actionError}
         </p>
       )}
       <QueryResult state={query.state} retry={query.retry}>
-        {({ officeHours, vacancies, subjects, monitors, users }) => {
+        {({ officeHours, agendaEvents, vacancies, subjects, monitors, users }) => {
           const vacancyById = new Map(vacancies.map((v) => [v.id, v]));
           const subjectById = new Map(subjects.map((s) => [s.id, s]));
           const userById = new Map(users.map((u) => [u.id, u]));
@@ -196,6 +207,52 @@ export function OfficeHoursPage() {
                             </tr>
                           );
                         })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </section>
+
+              <section className="section" aria-labelledby="agenda-sync-title">
+                <h2 id="agenda-sync-title">
+                  Agenda acadêmica sincronizada (vagas e horários)
+                </h2>
+                {agendaEvents.length === 0 ? (
+                  <EmptyState
+                    title="Nenhum evento sincronizado"
+                    description="Cadastre prazos de vagas ou horários de atendimento para preencher a agenda."
+                  />
+                ) : (
+                  <div className="table-wrap">
+                    <table>
+                      <caption>
+                        Eventos publicados no provedor de agenda externa
+                      </caption>
+                      <thead>
+                        <tr>
+                          <th>Evento</th>
+                          <th>Tipo</th>
+                          <th>Quando</th>
+                          <th>Local / Detalhes</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {agendaEvents.map((ev) => (
+                          <tr key={ev.externalId}>
+                            <td>{ev.title}</td>
+                            <td>
+                              <span className="badge">{ev.type}</span>
+                            </td>
+                            <td>
+                              {ev.date
+                                ? formatDateBr(ev.date)
+                                : ev.weekday
+                                  ? `${WEEKDAY_LABELS[ev.weekday] ?? ev.weekday} (${formatTimeShort(ev.startTime ?? '')} – ${formatTimeShort(ev.endTime ?? '')})`
+                                  : '—'}
+                            </td>
+                            <td>{ev.locationOrLink ?? ev.description ?? '—'}</td>
+                          </tr>
+                        ))}
                       </tbody>
                     </table>
                   </div>

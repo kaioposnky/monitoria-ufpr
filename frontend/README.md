@@ -57,15 +57,19 @@ frontend/
     │   ├── auth/
     │   │   ├── auth.types.ts          # Tipos de usuário autenticado e login
     │   │   ├── auth.api.ts            # Chamadas /auth/login e /auth/me
+    │   │   ├── auth.api.spec.ts       # Testes do cliente de autenticação
     │   │   └── AuthContext.tsx        # Sessão JWT e hook useAuth
     │   ├── catalog/
     │   │   ├── catalog.api.ts         # Consultas ao catálogo acadêmico
+    │   │   ├── catalog.api.spec.ts    # Testes de mapeamento do catálogo
     │   │   ├── catalog.types.ts       # Tipos dos dados do catálogo
     │   │   └── catalog.labels.ts      # Rótulos e opções de apresentação
     │   └── monitoring/
-    │       ├── monitoring.api.ts      # Operações CRUD e escrita de monitoria/admin
+    │       ├── monitoring.api.ts      # Operações CRUD, escrita e agenda
+    │       ├── monitoring.api.spec.ts # Testes dos contratos de escrita e agenda
     │       ├── monitoring.types.ts    # Tipos de domínio e formulários
-    │       └── monitoring.rules.ts    # Validação, rótulos e formatação
+    │       ├── monitoring.rules.ts    # Validação, rótulos e formatação
+    │       └── monitoring.rules.spec.ts # Testes das regras de validação/formatação
     ├── shared/                       # Código transversal sem interface visual
     │   ├── useQuery.ts               # Estado e cancelamento das consultas
     │   └── api/

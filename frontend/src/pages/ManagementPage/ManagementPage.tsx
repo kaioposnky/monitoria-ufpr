@@ -63,6 +63,8 @@ export function ManagementPage() {
   const [editStatus, setEditStatus] = useState<VacancyStatus>('ABERTA');
   const [editRequirements, setEditRequirements] = useState('');
   const [editDescription, setEditDescription] = useState('');
+  const [editOpeningDate, setEditOpeningDate] = useState('');
+  const [editClosingDate, setEditClosingDate] = useState('');
 
   const loadManagementData = useCallback(
     async (signal: AbortSignal) => {
@@ -110,6 +112,8 @@ export function ManagementPage() {
     setEditStatus(vacancy.status as VacancyStatus);
     setEditRequirements(vacancy.requirements ?? '');
     setEditDescription(vacancy.description ?? '');
+    setEditOpeningDate(vacancy.openingDate ?? '');
+    setEditClosingDate(vacancy.closingDate ?? '');
     setActionError(null);
     setActionSuccess(null);
   }
@@ -128,6 +132,8 @@ export function ManagementPage() {
         requisitos: editRequirements.trim() || null,
         descricao: editDescription.trim() || null,
         status: editStatus,
+        dataAbertura: editOpeningDate || null,
+        dataEncerramento: editClosingDate || null,
       });
       setActionSuccess(`Vaga #${editingVacancy.id} atualizada.`);
       setEditingVacancy(null);
@@ -373,6 +379,20 @@ export function ManagementPage() {
                             </option>
                           ))}
                         </select>
+                      </FormField>
+                      <FormField label="Abertura das inscrições">
+                        <input
+                          type="date"
+                          value={editOpeningDate}
+                          onChange={(e) => setEditOpeningDate(e.target.value)}
+                        />
+                      </FormField>
+                      <FormField label="Encerramento das inscrições">
+                        <input
+                          type="date"
+                          value={editClosingDate}
+                          onChange={(e) => setEditClosingDate(e.target.value)}
+                        />
                       </FormField>
                       <FormField label="Requisitos">
                         <textarea

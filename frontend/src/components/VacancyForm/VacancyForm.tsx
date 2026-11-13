@@ -7,6 +7,7 @@ import {
   formatSubjectLabel,
   isPositiveInteger,
   isSemester,
+  isValidDateRange,
   VACANCY_TYPE_LABELS,
 } from '../../features/monitoring/monitoring.rules';
 import {
@@ -31,6 +32,8 @@ const emptyDraft: VacancyDraft = {
   semester: '',
   positions: '',
   type: '',
+  openingDate: '',
+  closingDate: '',
   requirements: '',
   description: '',
 };
@@ -81,6 +84,10 @@ export function VacancyForm({ subjects, professors = [], onCreated }: Props) {
     if (!VACANCY_TYPES.some((type) => type === values.type)) {
       next.type = 'Selecione o tipo da vaga.';
     }
+    if (!isValidDateRange(values.openingDate, values.closingDate)) {
+      next.closingDate =
+        'A data de encerramento deve ser igual ou posterior à data de abertura.';
+    }
     return next;
   }
 
@@ -101,6 +108,8 @@ export function VacancyForm({ subjects, professors = [], onCreated }: Props) {
         tipoVaga: draft.type,
         requisitos: draft.requirements.trim() || null,
         descricao: draft.description.trim() || null,
+        dataAbertura: draft.openingDate || null,
+        dataEncerramento: draft.closingDate || null,
       });
       setCreatedVacancy(created);
       setDraft(emptyDraft);
@@ -233,6 +242,30 @@ export function VacancyForm({ subjects, professors = [], onCreated }: Props) {
               </option>
             ))}
           </select>
+        </FormField>
+        <FormField
+          label="Abertura das inscrições (opcional)"
+          error={errors.openingDate}
+          hint="Data registrada na agenda acadêmica."
+        >
+          <input
+            name="openingDate"
+            type="date"
+            value={draft.openingDate}
+            onChange={(event) => update('openingDate', event.target.value)}
+          />
+        </FormField>
+        <FormField
+          label="Encerramento das inscrições (opcional)"
+          error={errors.closingDate}
+          hint="Data limite registrada na agenda acadêmica."
+        >
+          <input
+            name="closingDate"
+            type="date"
+            value={draft.closingDate}
+            onChange={(event) => update('closingDate', event.target.value)}
+          />
         </FormField>
         <FormField
           label="Requisitos (opcional)"

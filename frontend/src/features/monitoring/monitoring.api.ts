@@ -17,6 +17,8 @@ import type {
   ActivityApprovalStatus,
   ActivityLogRecord,
   ActivityType,
+  AgendaEvent,
+  AgendaEventType,
   Application,
   ApplicationStatus,
   MonitorRecord,
@@ -66,6 +68,21 @@ interface VagaMonitoriaDto {
   requisitos: string | null;
   descricao: string | null;
   status: string;
+  dataAbertura?: string | null;
+  dataEncerramento?: string | null;
+}
+
+interface EventoAgendaDto {
+  idExterno: string;
+  tipo: AgendaEventType;
+  referenciaId: number;
+  titulo: string;
+  descricao: string | null;
+  data: string | null;
+  diaSemana: Weekday | null;
+  horaInicio: string | null;
+  horaFim: string | null;
+  localOuLink: string | null;
 }
 
 interface CandidaturaDto {
@@ -149,6 +166,21 @@ const mapVacancy = (dto: VagaMonitoriaDto): Vacancy => ({
   requirements: dto.requisitos,
   description: dto.descricao,
   status: dto.status,
+  openingDate: dto.dataAbertura ?? null,
+  closingDate: dto.dataEncerramento ?? null,
+});
+
+const mapAgendaEvent = (dto: EventoAgendaDto): AgendaEvent => ({
+  externalId: dto.idExterno,
+  type: dto.tipo,
+  referenceId: dto.referenciaId,
+  title: dto.titulo,
+  description: dto.descricao,
+  date: dto.data,
+  weekday: dto.diaSemana,
+  startTime: dto.horaInicio,
+  endTime: dto.horaFim,
+  locationOrLink: dto.localOuLink,
 });
 
 const mapApplication = (dto: CandidaturaDto): Application => ({
@@ -217,6 +249,8 @@ export interface CreateVacancyPayload {
   tipoVaga: VacancyType;
   requisitos: string | null;
   descricao: string | null;
+  dataAbertura: string | null;
+  dataEncerramento: string | null;
 }
 
 export interface UpdateVacancyPayload {
@@ -226,6 +260,8 @@ export interface UpdateVacancyPayload {
   requisitos: string | null;
   descricao: string | null;
   status: VacancyStatus;
+  dataAbertura: string | null;
+  dataEncerramento: string | null;
 }
 
 export const createVacancy = (payload: CreateVacancyPayload) =>
@@ -509,3 +545,8 @@ export const updateUser = (id: number, payload: UpdateUserPayload) =>
   );
 
 export const deleteUser = (id: number) => deleteRequest(`/usuarios/${id}`);
+
+export const loadAgendaEvents = (signal?: AbortSignal) =>
+  list<EventoAgendaDto>('/agenda/eventos', signal).then((items) =>
+    items.map(mapAgendaEvent),
+  );

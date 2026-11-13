@@ -24,4 +24,6 @@ export interface Vacancy {
   requirements: string | null;
   description: string | null;
   status: string;
+  openingDate: string | null;
+  closingDate: string | null;
 }

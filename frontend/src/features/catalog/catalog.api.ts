@@ -37,6 +37,8 @@ interface VagaMonitoriaDto {
   requisitos: string | null;
   descricao: string | null;
   status: string;
+  dataAbertura?: string | null;
+  dataEncerramento?: string | null;
 }
 
 const mapCourse = (dto: CursoDto): Course => ({
@@ -68,6 +70,8 @@ const mapVacancy = (dto: VagaMonitoriaDto): Vacancy => ({
   requirements: dto.requisitos,
   description: dto.descricao,
   status: dto.status,
+  openingDate: dto.dataAbertura ?? null,
+  closingDate: dto.dataEncerramento ?? null,
 });
 
 export const loadCourses = (signal: AbortSignal) =>

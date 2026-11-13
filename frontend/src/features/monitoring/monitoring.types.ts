@@ -72,8 +72,28 @@ export interface VacancyDraft {
   semester: string;
   positions: string;
   type: VacancyType | '';
+  openingDate: string;
+  closingDate: string;
   requirements: string;
   description: string;
+}
+
+export type AgendaEventType =
+  | 'ABERTURA_VAGA'
+  | 'ENCERRAMENTO_VAGA'
+  | 'HORARIO_MONITORIA';
+
+export interface AgendaEvent {
+  externalId: string;
+  type: AgendaEventType;
+  referenceId: number;
+  title: string;
+  description: string | null;
+  date: string | null;
+  weekday: Weekday | null;
+  startTime: string | null;
+  endTime: string | null;
+  locationOrLink: string | null;
 }
 
 export interface OfficeHoursDraft {

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { catalogLabel } from '../../features/catalog/catalog.labels';
 import type { Subject, Vacancy } from '../../features/catalog/catalog.types';
+import { formatDateBr } from '../../features/monitoring/monitoring.rules';
 
 type Props = {
   vacancy: Vacancy;
@@ -22,6 +23,20 @@ export function VacancyDetails({ vacancy, subject }: Props) {
         <dd>{catalogLabel(vacancy.type)}</dd>
         <dt>Quantidade de vagas</dt>
         <dd>{vacancy.positions}</dd>
+        {(vacancy.openingDate || vacancy.closingDate) && (
+          <>
+            <dt>Período de inscrições</dt>
+            <dd>
+              {vacancy.openingDate
+                ? `Abertura: ${formatDateBr(vacancy.openingDate)}`
+                : 'Abertura imediata'}
+              {' · '}
+              {vacancy.closingDate
+                ? `Encerramento: ${formatDateBr(vacancy.closingDate)}`
+                : 'Sem data limite'}
+            </dd>
+          </>
+        )}
         <dt>Professor responsável</dt>
         <dd>Identificador {vacancy.professorId}</dd>
         <dt>Requisitos</dt>
