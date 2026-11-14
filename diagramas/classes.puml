@@ -1,0 +1,421 @@
+@startuml classes
+!pragma layout smetana
+skinparam classAttributeIconSize 0
+
+package "com.sistema.entity" {
+  class Curso {
+    - id: Long
+    - codigo: String
+    - nome: String
+    - setor: String
+    + atualizar(...)
+  }
+
+  class Materia {
+    - id: Long
+    - codigo: String
+    - nome: String
+    - departamento: String
+    + atualizar(...)
+  }
+
+  class CursoMateriaId {
+    - cursoId: Long
+    - materiaId: Long
+  }
+
+  class CursoMateria {
+    - id: CursoMateriaId
+  }
+
+  class Usuario {
+    - id: Long
+    - nome: String
+    - email: String
+    - tipoUsuario: TipoUsuario
+    - matricula: String
+    - cursoId: Long
+    - ativo: boolean
+    - senhaHash: String
+    - criadoEm: OffsetDateTime
+    + atualizar(...)
+  }
+
+  enum TipoUsuario {
+    ALUNO
+    PROFESSOR
+    ADMIN
+  }
+
+  class VagaMonitoria {
+    - id: Long
+    - materiaId: Long
+    - professorId: Long
+    - semestre: String
+    - quantidadeVagas: Integer
+    - tipoVaga: TipoVaga
+    - requisitos: String
+    - descricao: String
+    - status: StatusVaga
+    - dataAbertura: LocalDate
+    - dataEncerramento: LocalDate
+    - criadoEm: OffsetDateTime
+    + atualizar(...)
+  }
+
+  enum TipoVaga {
+    REMUNERADA
+    VOLUNTARIA
+  }
+
+  enum StatusVaga {
+    ABERTA
+    EM_SELECAO
+    ENCERRADA
+    CANCELADA
+  }
+
+  class Candidatura {
+    - id: Long
+    - vagaId: Long
+    - alunoId: Long
+    - notaDisciplina: BigDecimal
+    - cr: BigDecimal
+    - justificativa: String
+    - status: StatusCandidatura
+    - criadoEm: OffsetDateTime
+    + atualizar(...)
+  }
+
+  enum StatusCandidatura {
+    PENDENTE
+    EM_ANALISE
+    APROVADO
+    REPROVADO
+    DESISTENTE
+  }
+
+  class Monitor {
+    - id: Long
+    - vagaId: Long
+    - alunoId: Long
+    - candidaturaId: Long
+    - cargaHorariaSemanal: Integer
+    - status: StatusMonitor
+    - dataInicio: LocalDate
+    - dataFim: LocalDate
+    + atualizar(...)
+  }
+
+  enum StatusMonitor {
+    ATIVO
+    INATIVO
+    DESLIGADO
+    CONCLUIDO
+  }
+
+  class HorarioAtendimento {
+    - id: Long
+    - monitorId: Long
+    - diaSemana: DiaSemana
+    - horaInicio: LocalTime
+    - horaFim: LocalTime
+    - localAtendimento: String
+    - linkReuniao: String
+    + atualizar(...)
+  }
+
+  enum DiaSemana {
+    SEGUNDA
+    TERCA
+    QUARTA
+    QUINTA
+    SEXTA
+    SABADO
+  }
+
+  class RegistroAtividade {
+    - id: Long
+    - monitorId: Long
+    - dataAtividade: LocalDate
+    - horaInicio: LocalTime
+    - horaFim: LocalTime
+    - tipoAtividade: TipoAtividade
+    - descricao: String
+    - quantidadeAlunosAtendidos: Integer
+    - statusAprovacao: StatusAprovacao
+    - feedbackProfessor: String
+    - criadoEm: OffsetDateTime
+    + atualizar(...)
+    + atualizarAprovacao(...)
+  }
+
+  enum TipoAtividade {
+    ATENDIMENTO_DUVIDAS
+    PREPARACAO_MATERIAL
+    AUXILIO_AULA_PRATICA
+    CORRECAO_EXERCICIOS
+    OUTRO
+  }
+
+  enum StatusAprovacao {
+    PENDENTE
+    APROVADO
+    REJEITADO
+  }
+}
+
+package "com.sistema.integration" {
+  class IntegracaoExecutor {
+    {static} + executarSemInterromper(log: Logger, contexto: String, acao: Runnable): void
+  }
+
+  package "com.sistema.integration.notificacao" {
+    class NotificacaoMensagem <<record>> {
+      + destinatarioEmail: String
+      + assunto: String
+      + corpo: String
+      + tipo: TipoNotificacao
+    }
+
+    enum TipoNotificacao {
+      CANDIDATURA_REGISTRADA
+      CANDIDATURA_AVALIADA
+      MONITOR_EFETIVADO
+      ATIVIDADE_AVALIADA
+    }
+
+    interface Notificador {
+      + notificar(mensagem: NotificacaoMensagem): void
+    }
+
+    class RegistroNotificacao <<record>> {
+      + enviadaEm: OffsetDateTime
+      + mensagem: NotificacaoMensagem
+    }
+
+    class NotificadorFake {
+      - historico: List<RegistroNotificacao>
+      + notificar(mensagem: NotificacaoMensagem): void
+      + listarHistorico(): List<RegistroNotificacao>
+      + limparHistorico(): void
+    }
+
+    class EmailNotificador {
+      - remetente: String
+      - enviosRegistrados: List<String>
+      + notificar(mensagem: NotificacaoMensagem): void
+      + listarEnviosRegistrados(): List<String>
+    }
+  }
+
+  package "com.sistema.integration.agenda" {
+    enum TipoEventoAgenda {
+      ABERTURA_VAGA
+      ENCERRAMENTO_VAGA
+      HORARIO_MONITORIA
+    }
+
+    class EventoAgenda <<record>> {
+      + idExterno: String
+      + tipo: TipoEventoAgenda
+      + referenciaId: Long
+      + titulo: String
+      + descricao: String
+      + data: LocalDate
+      + diaSemana: DiaSemana
+      + horaInicio: LocalTime
+      + horaFim: LocalTime
+      + localOuLink: String
+    }
+
+    interface ServicoAgenda {
+      + sincronizarVaga(vaga: VagaMonitoria, codigoMateria: String, nomeMateria: String): List<EventoAgenda>
+      + removerEventosVaga(vagaId: Long): void
+      + sincronizarHorario(horario: HorarioAtendimento, vagaId: Long, codigoMateria: String, nomeMateria: String, nomeMonitor: String): EventoAgenda
+      + removerHorario(horarioId: Long): void
+      + listarEventos(): List<EventoAgenda>
+      + exportarCalendarioIcs(): String
+    }
+
+    abstract class AbstractMapaAgenda {
+      # eventos: Map<String, EventoAgenda>
+      + sincronizarVaga(...): List<EventoAgenda>
+      + removerEventosVaga(vagaId: Long): void
+      + sincronizarHorario(...): EventoAgenda
+      + removerHorario(horarioId: Long): void
+      + listarEventos(): List<EventoAgenda>
+      + exportarCalendarioIcs(): String
+      + limpar(): void
+      # {abstract} prodId(): String
+      # aposAlteracao(operacao: String): void
+    }
+
+    class AgendaSimulada
+    class AgendaIcsAdapter {
+      - ultimoFeedIcs: String
+      + getUltimoFeedIcs(): String
+    }
+
+    class AgendaSupport {
+      {static} ~ construirEventosVaga(...): List<EventoAgenda>
+      {static} ~ construirEventoHorario(...): EventoAgenda
+      {static} ~ formatarIcs(...): String
+    }
+
+    class AgendaStartupSynchronizer {
+      + sincronizarCargaInicial(): void
+    }
+  }
+}
+
+package "com.sistema.service" {
+  class CursoService {
+    + listar(): List<CursoResponseDTO>
+    + buscar(id: Long): CursoResponseDTO
+    + criar(dto: CadastroCursoDTO): CursoResponseDTO
+    + atualizar(id: Long, dto: AtualizacaoCursoDTO): CursoResponseDTO
+    + excluir(id: Long): void
+  }
+
+  class MateriaService {
+    + listar(): List<MateriaResponseDTO>
+    + buscar(id: Long): MateriaResponseDTO
+    + criar(dto: CadastroMateriaDTO): MateriaResponseDTO
+    + atualizar(id: Long, dto: AtualizacaoMateriaDTO): MateriaResponseDTO
+    + excluir(id: Long): void
+  }
+
+  class CursoMateriaService {
+    + listar(): List<CursoMateriaResponseDTO>
+    + vincular(cursoId: Long, materiaId: Long): CursoMateriaResponseDTO
+    + desvincular(cursoId: Long, materiaId: Long): void
+  }
+
+  class UsuarioService {
+    + cadastrar(dto: CadastroUsuarioDTO): UsuarioResponseDTO
+    + listar(): List<UsuarioResponseDTO>
+    + buscar(id: Long): UsuarioResponseDTO
+    + atualizar(id: Long, dto: AtualizacaoUsuarioDTO): UsuarioResponseDTO
+    + excluir(id: Long): void
+  }
+
+  class VagaMonitoriaService {
+    + listar(): List<VagaMonitoriaResponseDTO>
+    + buscar(id: Long): VagaMonitoriaResponseDTO
+    + criar(dto: CadastroVagaMonitoriaDTO): VagaMonitoriaResponseDTO
+    + atualizar(id: Long, dto: AtualizacaoVagaMonitoriaDTO): VagaMonitoriaResponseDTO
+    + atualizarParcial(id: Long, dto: AtualizacaoParcialVagaMonitoriaDTO): VagaMonitoriaResponseDTO
+    + excluir(id: Long): void
+  }
+
+  class CandidaturaService {
+    + listar(): List<CandidaturaResponseDTO>
+    + buscar(id: Long): CandidaturaResponseDTO
+    + porVaga(vagaId: Long): List<CandidaturaResponseDTO>
+    + porAluno(alunoId: Long): List<CandidaturaResponseDTO>
+    + criar(dto: CadastroCandidaturaDTO): CandidaturaResponseDTO
+    + atualizar(id: Long, dto: AtualizacaoCandidaturaDTO): CandidaturaResponseDTO
+    + status(id: Long, dto: AtualizacaoStatusCandidaturaDTO): CandidaturaResponseDTO
+    + excluir(id: Long): void
+  }
+
+  class MonitorService {
+    + listar(): List<MonitorResponseDTO>
+    + buscar(id: Long): MonitorResponseDTO
+    + porVaga(vagaId: Long): List<MonitorResponseDTO>
+    + porAluno(alunoId: Long): List<MonitorResponseDTO>
+    + criar(dto: CadastroMonitorDTO): MonitorResponseDTO
+    + atualizar(id: Long, dto: AtualizacaoMonitorDTO): MonitorResponseDTO
+    + excluir(id: Long): void
+  }
+
+  class HorarioAtendimentoService {
+    + listar(): List<HorarioAtendimentoResponseDTO>
+    + buscar(id: Long): HorarioAtendimentoResponseDTO
+    + porMonitor(monitorId: Long): List<HorarioAtendimentoResponseDTO>
+    + criar(dto: CadastroHorarioAtendimentoDTO): HorarioAtendimentoResponseDTO
+    + atualizar(id: Long, dto: AtualizacaoHorarioAtendimentoDTO): HorarioAtendimentoResponseDTO
+    + excluir(id: Long): void
+  }
+
+  class RegistroAtividadeService {
+    + listar(): List<RegistroAtividadeResponseDTO>
+    + buscar(id: Long): RegistroAtividadeResponseDTO
+    + porMonitor(monitorId: Long): List<RegistroAtividadeResponseDTO>
+    + criar(dto: CadastroRegistroAtividadeDTO): RegistroAtividadeResponseDTO
+    + atualizar(id: Long, dto: AtualizacaoRegistroAtividadeDTO): RegistroAtividadeResponseDTO
+    + aprovacao(id: Long, dto: AprovacaoRegistroAtividadeDTO): RegistroAtividadeResponseDTO
+    + excluir(id: Long): void
+  }
+}
+
+package "com.sistema.security" {
+  class AccessGuard {
+    + isAdmin(auth: Authentication): boolean
+    + isProfessorOrAdmin(auth: Authentication): boolean
+    + isSelfOrAdmin(userId: Long, auth: Authentication): boolean
+    + canCreateVacancy(professorId: Long, auth: Authentication): boolean
+    + canManageVacancy(vagaId: Long, auth: Authentication): boolean
+    + canCreateApplication(alunoId: Long, auth: Authentication): boolean
+    + canReadStudentApplications(alunoId: Long, auth: Authentication): boolean
+    + canReadApplication(candidaturaId: Long, auth: Authentication): boolean
+    + canManageApplication(candidaturaId: Long, auth: Authentication): boolean
+    + canReviewApplication(candidaturaId: Long, auth: Authentication): boolean
+    + canManageMonitorForVacancy(vagaId: Long, auth: Authentication): boolean
+    + canManageMonitorById(monitorId: Long, auth: Authentication): boolean
+    + canManageMonitorOwnedResource(monitorId: Long, auth: Authentication): boolean
+    + canManageOfficeHour(horarioId: Long, auth: Authentication): boolean
+    + canManageActivityLog(registroId: Long, auth: Authentication): boolean
+    + canApproveActivityLog(registroId: Long, auth: Authentication): boolean
+  }
+}
+
+Curso "1" -- "0..*" CursoMateria
+Materia "1" -- "0..*" CursoMateria
+CursoMateria *-- CursoMateriaId
+Curso "0..1" <-- "0..*" Usuario : cursoId
+Usuario "1" <-- "0..*" VagaMonitoria : professorId
+Materia "1" <-- "0..*" VagaMonitoria : materiaId
+VagaMonitoria "1" <-- "0..*" Candidatura : vagaId
+Usuario "1" <-- "0..*" Candidatura : alunoId
+VagaMonitoria "1" <-- "0..*" Monitor : vagaId
+Usuario "1" <-- "0..*" Monitor : alunoId
+Candidatura "0..1" <-- "0..1" Monitor : candidaturaId
+Monitor "1" <-- "0..*" HorarioAtendimento : monitorId
+Monitor "1" <-- "0..*" RegistroAtividade : monitorId
+
+Usuario --> TipoUsuario
+VagaMonitoria --> TipoVaga
+VagaMonitoria --> StatusVaga
+Candidatura --> StatusCandidatura
+Monitor --> StatusMonitor
+HorarioAtendimento --> DiaSemana
+RegistroAtividade --> TipoAtividade
+RegistroAtividade --> StatusAprovacao
+NotificacaoMensagem --> TipoNotificacao
+NotificadorFake *-- RegistroNotificacao
+RegistroNotificacao --> NotificacaoMensagem
+EventoAgenda --> TipoEventoAgenda
+
+Notificador <|.. NotificadorFake
+Notificador <|.. EmailNotificador
+Notificador ..> NotificacaoMensagem
+ServicoAgenda <|.. AbstractMapaAgenda
+ServicoAgenda ..> EventoAgenda
+AbstractMapaAgenda <|-- AgendaSimulada
+AbstractMapaAgenda <|-- AgendaIcsAdapter
+AbstractMapaAgenda ..> AgendaSupport
+AgendaStartupSynchronizer --> ServicoAgenda
+
+VagaMonitoriaService --> ServicoAgenda
+VagaMonitoriaService ..> IntegracaoExecutor
+HorarioAtendimentoService --> ServicoAgenda
+HorarioAtendimentoService ..> IntegracaoExecutor
+CandidaturaService --> Notificador
+CandidaturaService ..> IntegracaoExecutor
+MonitorService --> Notificador
+MonitorService ..> IntegracaoExecutor
+RegistroAtividadeService --> Notificador
+RegistroAtividadeService ..> IntegracaoExecutor
+@enduml

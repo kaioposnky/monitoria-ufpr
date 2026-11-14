@@ -1,0 +1,21 @@
+@startuml comunicacao
+!pragma layout smetana
+left to right direction
+
+actor "Professor (SPA)" as Prof
+object ":VagaMonitoriaController" as VagaCtrl
+object ":AccessGuard" as Guard
+object ":VagaMonitoriaService" as VagaSvc
+object ":MateriaRepository" as MatRepo
+object ":UsuarioRepository" as UserRepo
+object ":VagaMonitoriaRepository" as VagaRepo
+object ":ServicoAgenda" as Agenda
+
+Prof --> VagaCtrl : 1: POST /api/v1/vagas-monitoria
+VagaCtrl --> Guard : 1.1: canCreateVacancy(professorId, auth)
+VagaCtrl --> VagaSvc : 1.2: criar(dto)
+VagaSvc --> MatRepo : 1.3: findById(materiaId)
+VagaSvc --> UserRepo : 1.4: existsById(professorId)
+VagaSvc --> VagaRepo : 1.5: save(vagaMonitoria)
+VagaSvc --> Agenda : 1.6: sincronizarVaga(vaga, codigo, nome) [via IntegracaoExecutor]
+@enduml

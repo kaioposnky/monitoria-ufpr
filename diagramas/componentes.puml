@@ -1,0 +1,72 @@
+@startuml componentes
+!pragma layout smetana
+left to right direction
+
+package "Cliente Web (SPA)" {
+  [Páginas e Componentes React] as UI
+  [Features (auth / catalog / monitoring)] as Features
+  [Transporte HTTP (shared/api/http.ts)] as Http
+  UI --> Features
+  Features --> Http
+}
+
+package "Backend Spring Boot (Monólito em Camadas)" {
+  package "Apresentação e Segurança" {
+    [Controllers REST (/api/v1/**)] as Controllers
+    [AuthController] as AuthCtrl
+    [AgendaController] as AgendaCtrl
+    [SecurityConfig + JwtAuthenticationFilter] as SecFilter
+    [AccessGuard] as Guard
+    [GlobalExceptionHandler] as ExHandler
+  }
+
+  package "Serviços, Cache e Inicialização" {
+    [Services (Curso, Materia, CursoMateria, Usuario, Vaga, Candidatura, Monitor, Horario, RegistroAtividade)] as Services
+    [CacheConfig (@EnableCaching) / Spring Cache] as Cache
+    [IntegracaoExecutor] as Exec
+    [AgendaStartupSynchronizer] as StartupSync
+  }
+
+  package "Domínio e Persistência" {
+    [Entities JPA] as Entities
+    [Repositories Spring Data JPA] as Repos
+  }
+
+  package "Portas de Integração Externa" {
+    interface Notificador
+    interface ServicoAgenda
+  }
+
+  SecFilter --> Controllers
+  SecFilter --> AuthCtrl
+  SecFilter --> AgendaCtrl
+  SecFilter --> Repos : UsuarioRepository
+  Controllers --> Guard
+  Controllers --> Services
+  Controllers ..> ExHandler
+  AuthCtrl --> Repos : Usuario/Monitor
+  AgendaCtrl --> ServicoAgenda
+  Services ..> Cache : @Cacheable / @CacheEvict
+  Services --> Repos
+  Services ..> Exec
+  Services --> Notificador
+  Services --> ServicoAgenda
+  StartupSync --> Repos
+  StartupSync --> ServicoAgenda
+  StartupSync ..> Exec
+  Repos --> Entities
+  Guard --> Repos
+}
+
+package "Adaptadores Substituíveis" {
+  [NotificadorFake / EmailNotificador] as NotifImpl
+  [AgendaSimulada / AgendaIcsAdapter] as AgendaImpl
+  Notificador <|.. NotifImpl
+  ServicoAgenda <|.. AgendaImpl
+}
+
+database "PostgreSQL + Flyway (prod)\nH2 em memória (dev/test)" as DB
+
+Http --> SecFilter : HTTP / JSON + Bearer JWT
+Repos --> DB : JDBC / JPA
+@enduml
