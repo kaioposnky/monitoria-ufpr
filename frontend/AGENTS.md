@@ -41,7 +41,7 @@ export function ExamplePanel({ title, children }: Props) {
 - Páginas: leem parâmetros de rota, coordenam consultas via `useQuery` e ligam callbacks aos componentes.
 - Componentes: apresentação e estado local de formulário/erros; recebem dados e callbacks por props.
 - `features/auth`: login, `/auth/me` e contexto `AuthContext`.
-- `features/catalog`: tipos e leitura pública de cursos, matérias, vínculos e vagas.
+- `features/catalog`: tipos e leitura pública de cursos, disciplinas, matérias (tópicos 1:N), vínculos curso-disciplina (N:N) e vagas.
 - `features/monitoring`: tipos, chamadas de escrita/leitura (vagas, candidaturas, monitores, horários, atividades, usuários, catálogo admin, agenda) e regras de validação local (`monitoring.rules.ts`).
 - `shared/api/http.ts`: transporte HTTP, cabeçalho Bearer, `AbortSignal` e parse de erros do `GlobalExceptionHandler`.
 - `shared/useQuery.ts`: estados `loading`/`success`/`error`, cancelamento e `retry()`.
@@ -53,14 +53,14 @@ A dependência segue de cima para baixo: `pages` -> `components`/`features` -> `
 
 - Manter TypeScript estrito, sem `any` nem casts que escondam erro de contrato.
 - Identificadores de código em inglês; textos de interface e mensagens em português.
-- Usar chave composta para vínculo curso-matéria e mapas de consulta ao cruzar coleções por ID.
+- Usar chave composta para vínculo curso-disciplina e mapas de consulta ao cruzar coleções por ID.
 - Respeitar `AbortSignal` e não converter JSON inesperado em lista vazia (lançar `ApiError(502, ...)`).
 - Não adicionar Redux, bibliotecas externas de cache ou classes/repositórios artificiais sem demanda real.
 - Ao renomear ou apagar módulos, atualizar todos os imports sem deixar reexports antigos.
 
 ## Formulários, acessibilidade e layout
 
-- Nos formulários com validação por campo (`ApplicationForm`, `VacancyForm`, `OfficeHoursForm`, `MonitorReviewForm`), submeter via `<form onSubmit>` com `preventDefault` e `noValidate`, exibindo mensagens no `FormField`. Na `LoginPage` e nos painéis administrativos e de gestão (`ManagementPage`, `MonitorsPanel`, `ActivityLogsPanel`, `AdminCatalogPanel`, `AdminUsersPanel`), exibir erros gerais em `<p className="notice error" role="alert">`.
+- Nos formulários com validação por campo (`ApplicationForm`, `VacancyForm`, `OfficeHoursForm`, `MonitorReviewForm`), submeter via `<form onSubmit>` com `preventDefault` e `noValidate` e exibir mensagens no `FormField`. Na `LoginPage` e nos painéis administrativos e de gestão (`ManagementPage`, `MonitorsPanel`, `ActivityLogsPanel`, `AdminCatalogPanel`, `AdminUsersPanel`), exibir erros gerais em `<p className="notice error" role="alert">`.
 - Garantir label associado (`id`, `aria-describedby`, `aria-invalid`) e avisos de erro com `role="alert"`.
 - Manter navegação por teclado, foco visível, skip link e hierarquia de headings.
 - Não usar `dangerouslySetInnerHTML` para dados vindos da API.

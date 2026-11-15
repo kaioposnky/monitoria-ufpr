@@ -1,21 +1,31 @@
 import { Link } from 'react-router-dom';
 import { catalogLabel } from '../../features/catalog/catalog.labels';
-import type { Subject, Vacancy } from '../../features/catalog/catalog.types';
+import type {
+  Subject,
+  Topic,
+  Vacancy,
+} from '../../features/catalog/catalog.types';
 import { formatDateBr } from '../../features/monitoring/monitoring.rules';
 
 type Props = {
   vacancy: Vacancy;
   subject: Subject | null;
+  topics?: Topic[];
 };
 
-export function VacancyDetails({ vacancy, subject }: Props) {
+export function VacancyDetails({ vacancy, subject, topics = [] }: Props) {
   const isOpen = vacancy.status === 'ABERTA';
 
   return (
     <article className="panel">
       <span className="badge">{catalogLabel(vacancy.status)}</span>
-      <h2>{subject?.name ?? 'Matéria #' + vacancy.subjectId}</h2>
-      {subject && <p className="muted">Código {subject.code}</p>}
+      <h2>{subject?.name ?? 'Disciplina #' + vacancy.subjectId}</h2>
+      {subject && (
+        <p className="muted">
+          Código {subject.code}
+          {subject.department ? ` · ${subject.department}` : ''}
+        </p>
+      )}
       <dl>
         <dt>Semestre</dt>
         <dd>{vacancy.semester}</dd>
@@ -45,6 +55,21 @@ export function VacancyDetails({ vacancy, subject }: Props) {
         </dd>
         <dt>Descrição</dt>
         <dd className="multiline">{vacancy.description || 'Não informada.'}</dd>
+        <dt>Matérias da disciplina</dt>
+        <dd>
+          {topics.length > 0 ? (
+            <ul>
+              {topics.map((topic) => (
+                <li key={topic.id}>
+                  <strong>{topic.name}</strong>
+                  {topic.description ? ` — ${topic.description}` : ''}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            'Nenhuma matéria cadastrada para esta disciplina.'
+          )}
+        </dd>
       </dl>
       <div className="form-actions">
         {isOpen && (

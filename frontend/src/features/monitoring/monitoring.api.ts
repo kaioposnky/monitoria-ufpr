@@ -11,6 +11,7 @@ import type {
   Course,
   CourseSubject,
   Subject,
+  Topic,
   Vacancy,
 } from '../catalog/catalog.types';
 import type {
@@ -46,21 +47,28 @@ interface CursoDto {
   setor: string | null;
 }
 
-interface MateriaDto {
+interface DisciplinaDto {
   id: number;
   codigo: string;
   nome: string;
   departamento: string | null;
 }
 
-interface CursoMateriaDto {
+interface MateriaDto {
+  id: number;
+  disciplinaId: number;
+  nome: string;
+  descricao: string | null;
+}
+
+interface CursoDisciplinaDto {
   cursoId: number;
-  materiaId: number;
+  disciplinaId: number;
 }
 
 interface VagaMonitoriaDto {
   id: number;
-  materiaId: number;
+  disciplinaId: number;
   professorId: number;
   semestre: string;
   quantidadeVagas: number;
@@ -149,16 +157,23 @@ const mapCourse = (dto: CursoDto): Course => ({
   sector: dto.setor,
 });
 
-const mapSubject = (dto: MateriaDto): Subject => ({
+const mapSubject = (dto: DisciplinaDto): Subject => ({
   id: dto.id,
   code: dto.codigo,
   name: dto.nome,
   department: dto.departamento,
 });
 
+const mapTopic = (dto: MateriaDto): Topic => ({
+  id: dto.id,
+  disciplineId: dto.disciplinaId,
+  name: dto.nome,
+  description: dto.descricao,
+});
+
 const mapVacancy = (dto: VagaMonitoriaDto): Vacancy => ({
   id: dto.id,
-  subjectId: dto.materiaId,
+  subjectId: dto.disciplinaId,
   professorId: dto.professorId,
   semester: dto.semestre,
   positions: dto.quantidadeVagas,
@@ -242,7 +257,7 @@ const mapUser = (dto: UsuarioDto): UserSummary => ({
 
 // Vagas de monitoria
 export interface CreateVacancyPayload {
-  materiaId: number;
+  disciplinaId: number;
   professorId: number;
   semestre: string;
   quantidadeVagas: number;
@@ -469,7 +484,7 @@ export const approveActivityLog = (
 export const deleteActivityLog = (id: number) =>
   deleteRequest(`/registros-atividades/${id}`);
 
-// Admin — Cursos, Matérias, Vínculos e Usuários
+// Admin — Cursos, Disciplinas, Matérias, Vínculos e Usuários
 export interface CoursePayload {
   codigo: string;
   nome: string;
@@ -480,6 +495,12 @@ export interface SubjectPayload {
   codigo: string;
   nome: string;
   departamento: string;
+}
+
+export interface TopicPayload {
+  disciplinaId: number;
+  nome: string;
+  descricao: string | null;
 }
 
 export interface CreateUserPayload {
@@ -510,28 +531,39 @@ export const updateCourse = (id: number, payload: CoursePayload) =>
 export const deleteCourse = (id: number) => deleteRequest(`/cursos/${id}`);
 
 export const createSubject = (payload: SubjectPayload) =>
-  postJson<SubjectPayload, MateriaDto>('/materias', payload).then(mapSubject);
-
-export const updateSubject = (id: number, payload: SubjectPayload) =>
-  putJson<SubjectPayload, MateriaDto>(`/materias/${id}`, payload).then(
+  postJson<SubjectPayload, DisciplinaDto>('/disciplinas', payload).then(
     mapSubject,
   );
 
-export const deleteSubject = (id: number) => deleteRequest(`/materias/${id}`);
+export const updateSubject = (id: number, payload: SubjectPayload) =>
+  putJson<SubjectPayload, DisciplinaDto>(`/disciplinas/${id}`, payload).then(
+    mapSubject,
+  );
+
+export const deleteSubject = (id: number) =>
+  deleteRequest(`/disciplinas/${id}`);
+
+export const createTopic = (payload: TopicPayload) =>
+  postJson<TopicPayload, MateriaDto>('/materias', payload).then(mapTopic);
+
+export const updateTopic = (id: number, payload: TopicPayload) =>
+  putJson<TopicPayload, MateriaDto>(`/materias/${id}`, payload).then(mapTopic);
+
+export const deleteTopic = (id: number) => deleteRequest(`/materias/${id}`);
 
 export const linkCourseSubject = (courseId: number, subjectId: number) =>
-  postJson<Record<string, never>, CursoMateriaDto>(
-    `/cursos-materias/${courseId}/${subjectId}`,
+  postJson<Record<string, never>, CursoDisciplinaDto>(
+    `/cursos-disciplinas/${courseId}/${subjectId}`,
     {},
   ).then(
     (dto): CourseSubject => ({
       courseId: dto.cursoId,
-      subjectId: dto.materiaId,
+      subjectId: dto.disciplinaId,
     }),
   );
 
 export const unlinkCourseSubject = (courseId: number, subjectId: number) =>
-  deleteRequest(`/cursos-materias/${courseId}/${subjectId}`);
+  deleteRequest(`/cursos-disciplinas/${courseId}/${subjectId}`);
 
 export const loadUsers = (signal?: AbortSignal) =>
   list<UsuarioDto>('/usuarios', signal).then((items) => items.map(mapUser));

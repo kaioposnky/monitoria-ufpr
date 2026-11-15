@@ -70,7 +70,7 @@ export function VacancyForm({ subjects, professors = [], onCreated }: Props) {
   function validate(values: VacancyDraft): Errors {
     const next: Errors = {};
     if (!subjects.some((subject) => String(subject.id) === values.subjectId)) {
-      next.subjectId = 'Selecione uma matéria do catálogo.';
+      next.subjectId = 'Selecione uma disciplina do catálogo.';
     }
     if (!isPositiveInteger(effectiveProfessorId)) {
       next.professorId = 'Selecione o professor responsável pela vaga.';
@@ -101,7 +101,7 @@ export function VacancyForm({ subjects, professors = [], onCreated }: Props) {
     setSubmitError(null);
     try {
       const created = await createVacancy({
-        materiaId: Number(draft.subjectId),
+        disciplinaId: Number(draft.subjectId),
         professorId: Number(effectiveProfessorId),
         semestre: draft.semester.trim(),
         quantidadeVagas: Number(draft.positions),
@@ -142,7 +142,7 @@ export function VacancyForm({ subjects, professors = [], onCreated }: Props) {
       )}
       <div className="form-grid">
         <FormField
-          label="Matéria (obrigatório)"
+          label="Disciplina (obrigatório)"
           error={errors.subjectId}
           hint="Disciplina atendida pela monitoria."
         >
@@ -152,7 +152,7 @@ export function VacancyForm({ subjects, professors = [], onCreated }: Props) {
             onChange={(event) => update('subjectId', event.target.value)}
             required
           >
-            <option value="">Selecione uma matéria</option>
+            <option value="">Selecione uma disciplina</option>
             {subjects.map((subject) => (
               <option key={subject.id} value={subject.id}>
                 {formatSubjectLabel(subject)}

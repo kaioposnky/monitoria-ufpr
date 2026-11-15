@@ -23,8 +23,8 @@ export function CourseSubjectsPage() {
   return (
     <>
       <PageHeader
-        title="Vínculos curso–matéria"
-        description="Disciplinas associadas a cada curso."
+        title="Vínculos curso–disciplina"
+        description="Relação N:N entre cursos e disciplinas do programa."
       />
       <QueryResult {...query}>
         {({ courses, subjects, relations }) => {
@@ -42,7 +42,7 @@ export function CourseSubjectsPage() {
                 <thead>
                   <tr>
                     <th>Curso</th>
-                    <th>Matéria</th>
+                    <th>Disciplina</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -53,7 +53,9 @@ export function CourseSubjectsPage() {
                       <tr key={relation.courseId + ':' + relation.subjectId}>
                         <td>{course?.name ?? 'Curso #' + relation.courseId}</td>
                         <td>
-                          {subject?.name ?? 'Matéria #' + relation.subjectId}
+                          {subject
+                            ? `${subject.code} — ${subject.name}`
+                            : 'Disciplina #' + relation.subjectId}
                         </td>
                       </tr>
                     );
@@ -64,7 +66,7 @@ export function CourseSubjectsPage() {
           ) : (
             <EmptyState
               title="Nenhum vínculo cadastrado"
-              description="Ainda não há relações entre cursos e matérias no catálogo."
+              description="Ainda não há relações entre cursos e disciplinas no catálogo."
             />
           );
         }}

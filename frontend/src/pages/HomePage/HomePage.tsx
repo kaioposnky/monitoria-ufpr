@@ -56,7 +56,7 @@ export function HomePage() {
             <NavigationCard
               to="/admin"
               title="Administração"
-              description="Gerencie cursos, matérias, vínculos e usuários."
+              description="Gerencie cursos, disciplinas, matérias, vínculos e usuários."
               status="ADMIN"
             />
           )}
@@ -72,13 +72,13 @@ export function HomePage() {
           />
           <NavigationCard
             to="/subjects"
-            title="Matérias"
-            description="Disciplinas e departamentos."
+            title="Disciplinas e matérias"
+            description="Disciplinas e suas matérias/conteúdos (1:N)."
           />
           <NavigationCard
             to="/course-subjects"
             title="Vínculos"
-            description="Disciplinas associadas aos cursos."
+            description="Relação N:N entre cursos e disciplinas."
           />
         </div>
       </section>

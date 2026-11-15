@@ -4,14 +4,14 @@
 
 | Rota | Acesso | Endpoints `/api/v1` usados |
 | --- | --- | --- |
-| `/courses`, `/subjects`, `/course-subjects`, `/monitoring-vacancies`, `/monitoring-vacancies/:id` | Público | `GET /cursos`, `/materias`, `/cursos-materias`, `/vagas-monitoria`, `/vagas-monitoria/{id}` |
-| `/office-hours` | Leitura pública; escrita `MONITOR` ativo, `PROFESSOR` ou `ADMIN` | `GET /horarios-atendimento`, `/agenda/eventos`, `/agenda/calendario.ics`, `/vagas-monitoria`, `/materias`, `/monitores` (ou `/monitores/aluno/{id}` se `ALUNO`) e `/usuarios` (somente para `PROFESSOR` ou `ADMIN`); `POST`/`DELETE /horarios-atendimento` |
+| `/courses`, `/subjects`, `/course-subjects`, `/monitoring-vacancies`, `/monitoring-vacancies/:id` | Público | `GET /cursos`, `/disciplinas`, `/materias`, `/cursos-disciplinas`, `/vagas-monitoria`, `/vagas-monitoria/{id}` |
+| `/office-hours` | Leitura pública; escrita `MONITOR` ativo, `PROFESSOR` ou `ADMIN` | `GET /horarios-atendimento`, `/agenda/eventos`, `/agenda/calendario.ics`, `/vagas-monitoria`, `/disciplinas`, `/monitores` (ou `/monitores/aluno/{id}` se `ALUNO`) e `/usuarios` (somente para `PROFESSOR` ou `ADMIN`); `POST`/`DELETE /horarios-atendimento` |
 | `/login` | Público | `POST /auth/login`, `GET /auth/me` |
-| `/applications/new` | `ALUNO` ou `ADMIN` | `GET /vagas-monitoria`, `/materias`, `/usuarios` (se `ADMIN`); `POST /candidaturas` |
-| `/management/vacancies/new` | `PROFESSOR` ou `ADMIN` | `GET /materias`, `/usuarios` (se `ADMIN`); `POST /vagas-monitoria` |
-| `/management/monitors/review` | `PROFESSOR` ou `ADMIN` | `GET /candidaturas`, `/vagas-monitoria`, `/materias`, `/usuarios`; `PATCH /candidaturas/{id}/status` |
-| `/management` | Autenticado | `GET /vagas-monitoria`, `/materias`, `/candidaturas` (ou `/candidaturas/aluno/{id}`), `/monitores` (ou `/monitores/aluno/{id}`), `/usuarios` (se staff), `/registros-atividades` (ou `/registros-atividades/monitor/{id}`); escrita em vagas (`PUT`, `PATCH`, `DELETE`), candidaturas (`PATCH /{id}/status`, `DELETE`), monitores (`POST`, `PUT`, `DELETE`) e registros (`POST`, `PATCH /{id}/aprovacao`, `DELETE`) |
-| `/admin` | `ADMIN` | `GET/POST/PUT/DELETE` em `/cursos`, `/materias` e `/usuarios`; `GET/POST/DELETE` em `/cursos-materias` |
+| `/applications/new` | `ALUNO` ou `ADMIN` | `GET /vagas-monitoria`, `/disciplinas`, `/usuarios` (se `ADMIN`); `POST /candidaturas` |
+| `/management/vacancies/new` | `PROFESSOR` ou `ADMIN` | `GET /disciplinas`, `/usuarios` (se `ADMIN`); `POST /vagas-monitoria` |
+| `/management/monitors/review` | `PROFESSOR` ou `ADMIN` | `GET /candidaturas`, `/vagas-monitoria`, `/disciplinas`, `/usuarios`; `PATCH /candidaturas/{id}/status` |
+| `/management` | Autenticado | `GET /vagas-monitoria`, `/disciplinas`, `/candidaturas` (ou `/candidaturas/aluno/{id}`), `/monitores` (ou `/monitores/aluno/{id}`), `/usuarios` (se staff), `/registros-atividades` (ou `/registros-atividades/monitor/{id}`); escrita em vagas (`PUT`, `PATCH`, `DELETE`), candidaturas (`PATCH /{id}/status`, `DELETE`), monitores (`POST`, `PUT`, `DELETE`) e registros (`POST`, `PATCH /{id}/aprovacao`, `DELETE`) |
+| `/admin` | `ADMIN` | `GET/POST/PUT/DELETE` em `/cursos`, `/disciplinas`, `/materias` e `/usuarios`; `GET/POST/DELETE` em `/cursos-disciplinas` |
 
 ## 2. Onde mexer (`frontend/src/`)
 

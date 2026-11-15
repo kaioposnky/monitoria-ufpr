@@ -440,7 +440,7 @@ export function ManagementPage() {
                       <thead>
                         <tr>
                           <th>ID</th>
-                          <th>Matéria</th>
+                          <th>Disciplina</th>
                           <th>Semestre</th>
                           <th>Vagas / Tipo</th>
                           <th>Status</th>
@@ -456,7 +456,7 @@ export function ManagementPage() {
                               <td>
                                 {subject
                                   ? formatSubjectLabel(subject)
-                                  : `Matéria #${v.subjectId}`}
+                                  : `Disciplina #${v.subjectId}`}
                               </td>
                               <td>{v.semester}</td>
                               <td>
@@ -526,7 +526,7 @@ export function ManagementPage() {
                   <thead>
                     <tr>
                       <th>ID</th>
-                      <th>Vaga / Matéria</th>
+                      <th>Vaga / Disciplina</th>
                       {isStaff && <th>Aluno</th>}
                       <th>Nota / CR</th>
                       <th>Status</th>

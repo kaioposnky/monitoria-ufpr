@@ -144,7 +144,7 @@ export function formatVacancyLabel(
 ): string {
   const subjectLabel = subject
     ? formatSubjectLabel(subject)
-    : 'Matéria #' + vacancy.subjectId;
+    : 'Disciplina #' + vacancy.subjectId;
   const typeLabel =
     VACANCY_TYPE_LABELS[vacancy.type as VacancyType] || vacancy.type;
   return (

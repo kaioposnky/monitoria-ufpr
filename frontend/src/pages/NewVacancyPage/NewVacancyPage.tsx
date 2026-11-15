@@ -32,14 +32,14 @@ export function NewVacancyPage() {
     <>
       <PageHeader
         title="Cadastrar vaga de monitoria"
-        description="Crie uma nova vaga vinculada a uma matéria do catálogo acadêmico."
+        description="Crie uma nova vaga vinculada a uma disciplina do catálogo acadêmico."
       />
       <QueryResult state={query.state} retry={query.retry}>
         {({ subjects, professors }) =>
           subjects.length === 0 ? (
             <EmptyState
-              title="Catálogo de matérias vazio"
-              description="Não há matérias disponíveis para vincular à vaga. Cadastre uma matéria na área de Administração antes de continuar."
+              title="Catálogo de disciplinas vazio"
+              description="Não há disciplinas disponíveis para vincular à vaga. Cadastre uma disciplina na área de Administração antes de continuar."
             />
           ) : (
             <VacancyForm subjects={subjects} professors={professors} />

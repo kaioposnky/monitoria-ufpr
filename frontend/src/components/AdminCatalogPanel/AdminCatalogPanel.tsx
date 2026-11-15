@@ -3,25 +3,30 @@ import type {
   Course,
   CourseSubject,
   Subject,
+  Topic,
 } from '../../features/catalog/catalog.types';
 import {
   createCourse,
   createSubject,
+  createTopic,
   deleteCourse,
   deleteSubject,
+  deleteTopic,
   linkCourseSubject,
   unlinkCourseSubject,
   updateCourse,
   updateSubject,
+  updateTopic,
 } from '../../features/monitoring/monitoring.api';
 import { errorMessage } from '../../shared/api/http';
 import { EmptyState } from '../EmptyState/EmptyState';
 import { FormField } from '../FormField/FormField';
 
 type Props = {
-  mode: 'courses' | 'subjects' | 'links';
+  mode: 'courses' | 'subjects' | 'topics' | 'links';
   courses: Course[];
   subjects: Subject[];
+  topics: Topic[];
   relations: CourseSubject[];
   onChanged: () => void;
 };
@@ -30,6 +35,7 @@ export function AdminCatalogPanel({
   mode,
   courses,
   subjects,
+  topics,
   relations,
   onChanged,
 }: Props) {
@@ -42,6 +48,11 @@ export function AdminCatalogPanel({
   const [subjectCode, setSubjectCode] = useState('');
   const [subjectName, setSubjectName] = useState('');
   const [subjectDept, setSubjectDept] = useState('');
+
+  const [editingTopicId, setEditingTopicId] = useState<number | null>(null);
+  const [topicDisciplineId, setTopicDisciplineId] = useState('');
+  const [topicName, setTopicName] = useState('');
+  const [topicDescription, setTopicDescription] = useState('');
 
   const [linkCourseId, setLinkCourseId] = useState('');
   const [linkSubjectId, setLinkSubjectId] = useState('');
@@ -65,6 +76,13 @@ export function AdminCatalogPanel({
     setSubjectCode('');
     setSubjectName('');
     setSubjectDept('');
+  }
+
+  function resetTopicForm() {
+    setEditingTopicId(null);
+    setTopicDisciplineId('');
+    setTopicName('');
+    setTopicDescription('');
   }
 
   async function handleSaveCourse(event: FormEvent<HTMLFormElement>) {
@@ -119,7 +137,7 @@ export function AdminCatalogPanel({
     setErrorMsg(null);
     setSuccessMsg(null);
     if (!subjectCode.trim() || !subjectName.trim() || !subjectDept.trim()) {
-      setErrorMsg('Informe código, nome e departamento da matéria.');
+      setErrorMsg('Informe código, nome e departamento da disciplina.');
       return;
     }
     setBusy(true);
@@ -131,10 +149,10 @@ export function AdminCatalogPanel({
       };
       if (editingSubjectId !== null) {
         await updateSubject(editingSubjectId, payload);
-        setSuccessMsg('Matéria atualizada com sucesso.');
+        setSuccessMsg('Disciplina atualizada com sucesso.');
       } else {
         await createSubject(payload);
-        setSuccessMsg('Matéria cadastrada com sucesso.');
+        setSuccessMsg('Disciplina cadastrada com sucesso.');
       }
       resetSubjectForm();
       onChanged();
@@ -151,8 +169,55 @@ export function AdminCatalogPanel({
     setBusy(true);
     try {
       await deleteSubject(id);
-      setSuccessMsg(`Matéria #${id} removida.`);
+      setSuccessMsg(`Disciplina #${id} removida.`);
       if (editingSubjectId === id) resetSubjectForm();
+      onChanged();
+    } catch (error) {
+      setErrorMsg(errorMessage(error));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleSaveTopic(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setErrorMsg(null);
+    setSuccessMsg(null);
+    if (!topicDisciplineId || !topicName.trim()) {
+      setErrorMsg('Selecione a disciplina e informe o nome da matéria.');
+      return;
+    }
+    setBusy(true);
+    try {
+      const payload = {
+        disciplinaId: Number(topicDisciplineId),
+        nome: topicName.trim(),
+        descricao: topicDescription.trim() || null,
+      };
+      if (editingTopicId !== null) {
+        await updateTopic(editingTopicId, payload);
+        setSuccessMsg('Matéria atualizada com sucesso.');
+      } else {
+        await createTopic(payload);
+        setSuccessMsg('Matéria cadastrada com sucesso.');
+      }
+      resetTopicForm();
+      onChanged();
+    } catch (error) {
+      setErrorMsg(errorMessage(error));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleDeleteTopic(id: number) {
+    setErrorMsg(null);
+    setSuccessMsg(null);
+    setBusy(true);
+    try {
+      await deleteTopic(id);
+      setSuccessMsg(`Matéria #${id} removida.`);
+      if (editingTopicId === id) resetTopicForm();
       onChanged();
     } catch (error) {
       setErrorMsg(errorMessage(error));
@@ -166,13 +231,13 @@ export function AdminCatalogPanel({
     setErrorMsg(null);
     setSuccessMsg(null);
     if (!linkCourseId || !linkSubjectId) {
-      setErrorMsg('Selecione o curso e a matéria para vincular.');
+      setErrorMsg('Selecione o curso e a disciplina para vincular.');
       return;
     }
     setBusy(true);
     try {
       await linkCourseSubject(Number(linkCourseId), Number(linkSubjectId));
-      setSuccessMsg('Vínculo curso × matéria criado com sucesso.');
+      setSuccessMsg('Vínculo curso × disciplina criado com sucesso.');
       setLinkCourseId('');
       setLinkSubjectId('');
       onChanged();
@@ -324,8 +389,8 @@ export function AdminCatalogPanel({
           <form className="panel" onSubmit={handleSaveSubject} noValidate>
             <h2>
               {editingSubjectId !== null
-                ? `Editar matéria #${editingSubjectId}`
-                : 'Cadastrar matéria'}
+                ? `Editar disciplina #${editingSubjectId}`
+                : 'Cadastrar disciplina'}
             </h2>
             <div className="form-grid">
               <FormField label="Código (obrigatório)">
@@ -337,7 +402,7 @@ export function AdminCatalogPanel({
                   required
                 />
               </FormField>
-              <FormField label="Nome da matéria (obrigatório)">
+              <FormField label="Nome da disciplina (obrigatório)">
                 <input
                   type="text"
                   placeholder="Algoritmos e Estruturas de Dados 1"
@@ -359,8 +424,8 @@ export function AdminCatalogPanel({
             <div className="form-actions">
               <button type="submit" className="primary" disabled={busy}>
                 {editingSubjectId !== null
-                  ? 'Salvar matéria'
-                  : 'Criar matéria'}
+                  ? 'Salvar disciplina'
+                  : 'Criar disciplina'}
               </button>
               {editingSubjectId !== null && (
                 <button
@@ -376,13 +441,13 @@ export function AdminCatalogPanel({
 
           {subjects.length === 0 ? (
             <EmptyState
-              title="Nenhuma matéria cadastrada"
-              description="Cadastre a primeira matéria acima."
+              title="Nenhuma disciplina cadastrada"
+              description="Cadastre a primeira disciplina acima."
             />
           ) : (
             <div className="table-wrap">
               <table>
-                <caption>Matérias cadastradas</caption>
+                <caption>Disciplinas cadastradas</caption>
                 <thead>
                   <tr>
                     <th>Código</th>
@@ -430,10 +495,130 @@ export function AdminCatalogPanel({
         </>
       )}
 
+      {mode === 'topics' && (
+        <>
+          <form className="panel" onSubmit={handleSaveTopic} noValidate>
+            <h2>
+              {editingTopicId !== null
+                ? `Editar matéria #${editingTopicId}`
+                : 'Cadastrar matéria (conteúdo da disciplina)'}
+            </h2>
+            <div className="form-grid">
+              <FormField label="Disciplina (obrigatório)">
+                <select
+                  value={topicDisciplineId}
+                  onChange={(e) => setTopicDisciplineId(e.target.value)}
+                  required
+                >
+                  <option value="">Selecione uma disciplina</option>
+                  {subjects.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.code} — {s.name}
+                    </option>
+                  ))}
+                </select>
+              </FormField>
+              <FormField label="Nome da matéria (obrigatório)">
+                <input
+                  type="text"
+                  placeholder="Ponteiros e Alocação Dinâmica"
+                  value={topicName}
+                  onChange={(e) => setTopicName(e.target.value)}
+                  required
+                />
+              </FormField>
+              <FormField label="Descrição (opcional)">
+                <input
+                  type="text"
+                  placeholder="Ementa ou detalhes do tópico abordado"
+                  value={topicDescription}
+                  onChange={(e) => setTopicDescription(e.target.value)}
+                />
+              </FormField>
+            </div>
+            <div className="form-actions">
+              <button type="submit" className="primary" disabled={busy}>
+                {editingTopicId !== null ? 'Salvar matéria' : 'Criar matéria'}
+              </button>
+              {editingTopicId !== null && (
+                <button
+                  type="button"
+                  className="secondary"
+                  onClick={resetTopicForm}
+                >
+                  Cancelar edição
+                </button>
+              )}
+            </div>
+          </form>
+
+          {topics.length === 0 ? (
+            <EmptyState
+              title="Nenhuma matéria cadastrada"
+              description="Cadastre as matérias/conteúdos vinculados às disciplinas acima."
+            />
+          ) : (
+            <div className="table-wrap">
+              <table>
+                <caption>Matérias cadastradas (1:N com Disciplina)</caption>
+                <thead>
+                  <tr>
+                    <th>Disciplina</th>
+                    <th>Matéria</th>
+                    <th>Descrição</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topics.map((topic) => {
+                    const disc = subjectById.get(topic.disciplineId);
+                    return (
+                      <tr key={topic.id}>
+                        <td>
+                          {disc
+                            ? `${disc.code} — ${disc.name}`
+                            : `Disciplina #${topic.disciplineId}`}
+                        </td>
+                        <td>{topic.name}</td>
+                        <td>{topic.description ?? '—'}</td>
+                        <td>
+                          <div className="inline-actions">
+                            <button
+                              type="button"
+                              className="secondary compact-button"
+                              onClick={() => {
+                                setEditingTopicId(topic.id);
+                                setTopicDisciplineId(String(topic.disciplineId));
+                                setTopicName(topic.name);
+                                setTopicDescription(topic.description ?? '');
+                              }}
+                            >
+                              Editar
+                            </button>
+                            <button
+                              type="button"
+                              className="danger compact-button"
+                              disabled={busy}
+                              onClick={() => handleDeleteTopic(topic.id)}
+                            >
+                              Excluir
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
+
       {mode === 'links' && (
         <>
           <form className="panel" onSubmit={handleCreateLink} noValidate>
-            <h2>Vincular matéria a curso</h2>
+            <h2>Vincular disciplina a curso</h2>
             <div className="form-grid">
               <FormField label="Curso (obrigatório)">
                 <select
@@ -449,13 +634,13 @@ export function AdminCatalogPanel({
                   ))}
                 </select>
               </FormField>
-              <FormField label="Matéria (obrigatório)">
+              <FormField label="Disciplina (obrigatório)">
                 <select
                   value={linkSubjectId}
                   onChange={(e) => setLinkSubjectId(e.target.value)}
                   required
                 >
-                  <option value="">Selecione uma matéria</option>
+                  <option value="">Selecione uma disciplina</option>
                   {subjects.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.code} — {s.name}
@@ -474,16 +659,16 @@ export function AdminCatalogPanel({
           {relations.length === 0 ? (
             <EmptyState
               title="Nenhum vínculo cadastrado"
-              description="Associe matérias aos cursos acima."
+              description="Associe disciplinas aos cursos acima."
             />
           ) : (
             <div className="table-wrap">
               <table>
-                <caption>Matriz Curso × Matéria</caption>
+                <caption>Matriz Curso × Disciplina (N:N)</caption>
                 <thead>
                   <tr>
                     <th>Curso</th>
-                    <th>Matéria</th>
+                    <th>Disciplina</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
@@ -499,7 +684,7 @@ export function AdminCatalogPanel({
                         <td>
                           {s
                             ? `${s.code} — ${s.name}`
-                            : `Matéria #${rel.subjectId}`}
+                            : `Disciplina #${rel.subjectId}`}
                         </td>
                         <td>
                           <button

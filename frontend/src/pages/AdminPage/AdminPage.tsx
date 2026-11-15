@@ -7,31 +7,34 @@ import {
   loadCourses,
   loadRelations,
   loadSubjects,
+  loadTopics,
 } from '../../features/catalog/catalog.api';
 import { loadUsers } from '../../features/monitoring/monitoring.api';
 import { useQuery } from '../../shared/useQuery';
 
-type AdminTab = 'courses' | 'subjects' | 'links' | 'users';
+type AdminTab = 'courses' | 'subjects' | 'topics' | 'links' | 'users';
 
 export function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>('courses');
 
   const loadAdminData = useCallback(async (signal: AbortSignal) => {
-    const [courses, subjects, relations, users] = await Promise.all([
+    const [courses, subjects, topics, relations, users] = await Promise.all([
       loadCourses(signal),
       loadSubjects(signal),
+      loadTopics(signal),
       loadRelations(signal),
       loadUsers(signal),
     ]);
-    return { courses, subjects, relations, users };
+    return { courses, subjects, topics, relations, users };
   }, []);
 
   const query = useQuery(loadAdminData);
 
   const tabs: { id: AdminTab; label: string }[] = [
     { id: 'courses', label: 'Cursos' },
-    { id: 'subjects', label: 'Matérias' },
-    { id: 'links', label: 'Vínculos Curso × Matéria' },
+    { id: 'subjects', label: 'Disciplinas' },
+    { id: 'topics', label: 'Matérias' },
+    { id: 'links', label: 'Vínculos Curso × Disciplina' },
     { id: 'users', label: 'Usuários' },
   ];
 
@@ -39,7 +42,7 @@ export function AdminPage() {
     <>
       <PageHeader
         title="Administração do sistema"
-        description="Área exclusiva de administradores para gerenciar cursos, matérias, vínculos acadêmicos e usuários."
+        description="Área exclusiva de administradores para gerenciar cursos, disciplinas, matérias (1:N), vínculos acadêmicos (N:N) e usuários."
       />
       <div className="tabs" role="tablist" aria-label="Seções administrativas">
         {tabs.map((tab) => (
@@ -57,7 +60,7 @@ export function AdminPage() {
       </div>
 
       <QueryResult state={query.state} retry={query.retry}>
-        {({ courses, subjects, relations, users }) =>
+        {({ courses, subjects, topics, relations, users }) =>
           activeTab === 'users' ? (
             <AdminUsersPanel
               users={users}
@@ -69,6 +72,7 @@ export function AdminPage() {
               mode={activeTab}
               courses={courses}
               subjects={subjects}
+              topics={topics}
               relations={relations}
               onChanged={() => query.retry()}
             />

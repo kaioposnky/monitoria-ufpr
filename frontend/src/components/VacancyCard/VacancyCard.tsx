@@ -12,7 +12,7 @@ export function VacancyCard({ vacancy, subject }: Props) {
   return (
     <article className="panel">
       <span className="badge">{catalogLabel(vacancy.status)}</span>
-      <h2>{subject?.name ?? 'Matéria #' + vacancy.subjectId}</h2>
+      <h2>{subject?.name ?? 'Disciplina #' + vacancy.subjectId}</h2>
       <p className="muted">
         {subject ? subject.code + ' · ' : ''}
         {vacancy.semester} · {catalogLabel(vacancy.type)}

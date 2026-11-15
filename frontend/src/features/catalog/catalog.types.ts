@@ -10,6 +10,12 @@ export interface Subject {
   name: string;
   department: string | null;
 }
+export interface Topic {
+  id: number;
+  disciplineId: number;
+  name: string;
+  description: string | null;
+}
 export interface CourseSubject {
   courseId: number;
   subjectId: number;

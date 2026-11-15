@@ -19,7 +19,7 @@ describe('monitoring.api', () => {
       new Response(
         JSON.stringify({
           id: 12,
-          materiaId: 1,
+          disciplinaId: 1,
           professorId: 2,
           semestre: '2026/2',
           quantidadeVagas: 2,
@@ -35,7 +35,7 @@ describe('monitoring.api', () => {
     );
 
     const vacancy = await createVacancy({
-      materiaId: 1,
+      disciplinaId: 1,
       professorId: 2,
       semestre: '2026/2',
       quantidadeVagas: 2,

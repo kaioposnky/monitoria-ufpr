@@ -3,7 +3,11 @@ import { Link, useParams } from 'react-router-dom';
 import { PageHeader } from '../../components/PageHeader/PageHeader';
 import { QueryResult } from '../../components/QueryResult/QueryResult';
 import { VacancyDetails } from '../../components/VacancyDetails/VacancyDetails';
-import { loadSubjects, loadVacancy } from '../../features/catalog/catalog.api';
+import {
+  loadSubjects,
+  loadTopics,
+  loadVacancy,
+} from '../../features/catalog/catalog.api';
 import { useQuery } from '../../shared/useQuery';
 
 export function VacancyDetailsPage() {
@@ -12,8 +16,15 @@ export function VacancyDetailsPage() {
     (signal: AbortSignal) => loadVacancy(id, signal),
     [id],
   );
+  const loadCatalog = useCallback(async (signal: AbortSignal) => {
+    const [subjects, topics] = await Promise.all([
+      loadSubjects(signal),
+      loadTopics(signal),
+    ]);
+    return { subjects, topics };
+  }, []);
   const vacancyQuery = useQuery(loadSelectedVacancy);
-  const subjectsQuery = useQuery(loadSubjects);
+  const catalogQuery = useQuery(loadCatalog);
 
   return (
     <>
@@ -25,15 +36,19 @@ export function VacancyDetailsPage() {
       </PageHeader>
       <QueryResult {...vacancyQuery}>
         {(vacancy) => (
-          <QueryResult {...subjectsQuery}>
-            {(subjects) => {
+          <QueryResult {...catalogQuery}>
+            {({ subjects, topics }) => {
               const subjectsById = new Map(
                 subjects.map((subject) => [subject.id, subject] as const),
+              );
+              const disciplineTopics = topics.filter(
+                (topic) => topic.disciplineId === vacancy.subjectId,
               );
               return (
                 <VacancyDetails
                   vacancy={vacancy}
                   subject={subjectsById.get(vacancy.subjectId) ?? null}
+                  topics={disciplineTopics}
                 />
               );
             }}
