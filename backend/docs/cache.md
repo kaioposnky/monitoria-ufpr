@@ -1,16 +1,17 @@
-# Cache em Memória da API (Spring Cache)
+# Cache em memória da API (Spring Cache)
 
 ## Escopo
 
 A API usa o cache nativo do Spring Boot (`spring-boot-starter-cache` com `ConcurrentMapCacheManager`, provedor `simple`) no padrão cache-aside direto nos services (`@Cacheable`, `@CacheEvict`, `@Caching`).
 
-A base primária segue sendo o banco relacional (PostgreSQL, ou H2 em `dev`/`test`). No cache miss, o método executa a query e guarda o DTO imutável em memória. Não há TTL configurado: a atualização do cache ocorre por invalidação explícita após escritas bem-sucedidas.
+O banco relacional continua como base primária (PostgreSQL, ou H2 em `dev`/`test`). No cache miss, o método executa a query e guarda o DTO imutável em memória. Não há TTL configurado: a atualização do cache ocorre por invalidação explícita após escritas bem-sucedidas.
 
 | Serviço | Caches |
 | --- | --- |
 | `CursoService` | `cursos:list`, `cursos:detail` |
-| `MateriaService` | `materias:list`, `materias:detail` |
-| `CursoMateriaService` | `curso-materias:list` |
+| `DisciplinaService` | `disciplinas:list`, `disciplinas:detail` |
+| `MateriaService` | `materias:list`, `materias:detail`, `materias:by-disciplina` |
+| `CursoDisciplinaService` | `curso-disciplinas:list` |
 | `VagaMonitoriaService` | `vagas:list`, `vagas:detail` |
 | `MonitorService` | `monitores:list`, `monitores:detail`, `monitores:by-vaga`, `monitores:by-aluno` |
 | `HorarioAtendimentoService` | `horarios:list`, `horarios:detail`, `horarios:by-monitor` |
@@ -31,4 +32,4 @@ spring.cache.type=${SPRING_CACHE_TYPE:simple}
 
 Para desabilitar sem alterar código, defina `SPRING_CACHE_TYPE=none`.
 
-O Actuator expõe `/actuator/health` (público) e `/actuator/metrics` (autenticado via JWT, conforme `SecurityConfig`), incluindo métricas nativas do Spring Cache quando ativo.
+O Actuator expõe `/actuator/health` (público) e `/actuator/metrics` (autenticado via JWT, conforme `SecurityConfig`), com métricas nativas do Spring Cache quando ativo.

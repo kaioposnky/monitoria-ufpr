@@ -11,15 +11,15 @@ import java.util.List;
  */
 public interface ServicoAgenda {
 
-    List<EventoAgenda> sincronizarVaga(VagaMonitoria vaga, String codigoMateria, String nomeMateria);
+    List<EventoAgenda> sincronizarVaga(VagaMonitoria vaga, String codigoDisciplina, String nomeDisciplina);
 
     void removerEventosVaga(Long vagaId);
 
     EventoAgenda sincronizarHorario(
             HorarioAtendimento horario,
             Long vagaId,
-            String codigoMateria,
-            String nomeMateria,
+            String codigoDisciplina,
+            String nomeDisciplina,
             String nomeMonitor);
 
     void removerHorario(Long horarioId);

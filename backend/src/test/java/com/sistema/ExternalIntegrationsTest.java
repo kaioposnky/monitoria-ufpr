@@ -4,8 +4,8 @@ import com.sistema.dto.request.CadastroCandidaturaDTO;
 import com.sistema.dto.request.CadastroHorarioAtendimentoDTO;
 import com.sistema.dto.request.CadastroVagaMonitoriaDTO;
 import com.sistema.entity.Candidatura;
+import com.sistema.entity.Disciplina;
 import com.sistema.entity.HorarioAtendimento;
-import com.sistema.entity.Materia;
 import com.sistema.entity.Monitor;
 import com.sistema.entity.Usuario;
 import com.sistema.entity.VagaMonitoria;
@@ -18,8 +18,8 @@ import com.sistema.integration.notificacao.NotificacaoMensagem;
 import com.sistema.integration.notificacao.Notificador;
 import com.sistema.integration.notificacao.NotificadorFake;
 import com.sistema.repository.CandidaturaRepository;
+import com.sistema.repository.DisciplinaRepository;
 import com.sistema.repository.HorarioAtendimentoRepository;
-import com.sistema.repository.MateriaRepository;
 import com.sistema.repository.MonitorRepository;
 import com.sistema.repository.UsuarioRepository;
 import com.sistema.repository.VagaMonitoriaRepository;
@@ -80,7 +80,7 @@ class ExternalIntegrationsTest {
         AgendaIcsAdapter adapter = new AgendaIcsAdapter("-//UFPR//Teste//PT");
         VagaMonitoria vaga = mock(VagaMonitoria.class);
         when(vaga.getId()).thenReturn(10L);
-        when(vaga.getMateriaId()).thenReturn(1L);
+        when(vaga.getDisciplinaId()).thenReturn(1L);
         when(vaga.getSemestre()).thenReturn("2026/2");
         when(vaga.getQuantidadeVagas()).thenReturn(2);
         when(vaga.getStatus()).thenReturn(VagaMonitoria.StatusVaga.ABERTA);
@@ -144,20 +144,20 @@ class ExternalIntegrationsTest {
         assertThat(candDto.status()).isEqualTo(Candidatura.StatusCandidatura.PENDENTE);
 
         // 2. Falha na ServicoAgenda não impede salvar vaga nem horário
-        MateriaRepository materiaRepo = mock(MateriaRepository.class);
+        DisciplinaRepository disciplinaRepo = mock(DisciplinaRepository.class);
         ServicoAgenda agendaQueFalha = mock(ServicoAgenda.class);
         doThrow(new IllegalStateException("Google Calendar offline"))
                 .when(agendaQueFalha).sincronizarVaga(any(), anyString(), anyString());
         doThrow(new IllegalStateException("Google Calendar offline"))
                 .when(agendaQueFalha).sincronizarHorario(any(), any(), any(), any(), any());
 
-        Materia materia = new Materia("CI1055", "Algoritmos 1", "DInf");
-        when(materiaRepo.findById(1L)).thenReturn(Optional.of(materia));
+        Disciplina disciplina = new Disciplina("CI1055", "Algoritmos 1", "DInf");
+        when(disciplinaRepo.findById(1L)).thenReturn(Optional.of(disciplina));
         when(userRepo.existsById(1L)).thenReturn(true);
         when(vagaRepo.save(any(VagaMonitoria.class))).thenAnswer(inv -> inv.getArgument(0));
 
         VagaMonitoriaService vagaService = new VagaMonitoriaService(
-                vagaRepo, materiaRepo, userRepo, agendaQueFalha);
+                vagaRepo, disciplinaRepo, userRepo, agendaQueFalha);
         var vagaDto = vagaService.criar(new CadastroVagaMonitoriaDTO(
                 1L, 1L, "2026/2", 2, VagaMonitoria.TipoVaga.REMUNERADA, null, null,
                 LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 30)));
@@ -170,7 +170,7 @@ class ExternalIntegrationsTest {
         when(horarioRepo.save(any(HorarioAtendimento.class))).thenAnswer(inv -> inv.getArgument(0));
 
         HorarioAtendimentoService horarioService = new HorarioAtendimentoService(
-                horarioRepo, monitorRepo, vagaRepo, materiaRepo, userRepo, agendaQueFalha);
+                horarioRepo, monitorRepo, vagaRepo, disciplinaRepo, userRepo, agendaQueFalha);
         var horarioDto = horarioService.criar(new CadastroHorarioAtendimentoDTO(
                 3L, HorarioAtendimento.DiaSemana.TERCA, LocalTime.of(14, 0), LocalTime.of(16, 0), "Lab 2", null));
         assertThat(horarioDto.localAtendimento()).isEqualTo("Lab 2");

@@ -1,14 +1,14 @@
-# Alternativas Arquiteturais e Trade-offs
+# Alternativas arquiteturais e trade-offs
 
 ## 1. Opções consideradas
 
-**Alternativa A: Monólito simples acoplado (MVC/SSR tradicional)**
+### Alternativa A: Monólito simples acoplado (MVC/SSR tradicional)
 Aplicação única com geração de páginas no servidor ou controllers acessando repositórios JPA diretamente, sem cache explícito nem interfaces separadas para e-mail e agenda.
 
-**Alternativa B (Adotada): Monólito em camadas (Spring Boot) + SPA React/Vite**
+### Alternativa B (Adotada): Monólito em camadas (Spring Boot) + SPA React/Vite
 Backend único separado por camadas técnicas (`controller`, `security`, `service`, `repository`, `entity`, `dto`, `integration`, `exception`, `config`), cache-aside via Spring Cache (`simple`), interfaces `Notificador` e `ServicoAgenda` para chamadas externas, e SPA consumindo `/api/v1/**` com JWT.
 
-**Alternativa C: Microsserviços por domínio**
+### Alternativa C: Microsserviços por domínio
 Divisão em serviços independentes (Catálogo, Candidaturas/Seleção, Atividades e Agenda/Notificações) com bancos separados, API Gateway, Redis compartilhado e mensageria entre serviços.
 
 ## 2. Comparação
@@ -28,6 +28,6 @@ Divisão em serviços independentes (Catálogo, Candidaturas/Seleção, Atividad
 
 | ASR | Como a Alternativa B atende |
 | --- | --- |
-| ASR-01 (Leituras em memória) | Usa Spring Cache no processo Spring, evitando ir ao banco em leituras repetidas sem exigir servidor Redis separado. |
+| ASR-01 (Leituras em memória) | Usa Spring Cache no processo Spring e não vai ao banco em leituras repetidas, sem exigir servidor Redis separado. |
 | ASR-02 (Segurança stateless) | JWT + `AccessGuard` centralizam a checagem de permissões em um backend único antes de servir a SPA ou outros clientes, sem sincronizar chaves entre vários serviços. |
 | ASR-03 (Simplicidade operacional) | Evita a infra da Alternativa C e evita o acoplamento direto da Alternativa A separando services e interfaces `Notificador` e `ServicoAgenda`. |

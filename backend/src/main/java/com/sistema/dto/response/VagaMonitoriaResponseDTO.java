@@ -7,7 +7,7 @@ import java.time.OffsetDateTime;
 
 public record VagaMonitoriaResponseDTO(
         Long id,
-        Long materiaId,
+        Long disciplinaId,
         Long professorId,
         String semestre,
         Integer quantidadeVagas,
@@ -22,7 +22,7 @@ public record VagaMonitoriaResponseDTO(
     public static VagaMonitoriaResponseDTO from(VagaMonitoria vaga) {
         return new VagaMonitoriaResponseDTO(
                 vaga.getId(),
-                vaga.getMateriaId(),
+                vaga.getDisciplinaId(),
                 vaga.getProfessorId(),
                 vaga.getSemestre(),
                 vaga.getQuantidadeVagas(),

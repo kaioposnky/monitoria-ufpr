@@ -12,9 +12,9 @@ abstract class AbstractMapaAgenda implements ServicoAgenda {
     protected final Map<String, EventoAgenda> eventos = new ConcurrentHashMap<>();
 
     @Override
-    public List<EventoAgenda> sincronizarVaga(VagaMonitoria vaga, String codigoMateria, String nomeMateria) {
+    public List<EventoAgenda> sincronizarVaga(VagaMonitoria vaga, String codigoDisciplina, String nomeDisciplina) {
         removerEventosVaga(vaga.getId());
-        List<EventoAgenda> gerados = AgendaSupport.construirEventosVaga(vaga, codigoMateria, nomeMateria);
+        List<EventoAgenda> gerados = AgendaSupport.construirEventosVaga(vaga, codigoDisciplina, nomeDisciplina);
         gerados.forEach(evento -> eventos.put(evento.idExterno(), evento));
         aposAlteracao(gerados.isEmpty() ? "remocao-vaga:" + vaga.getId() : "sync-vaga:" + vaga.getId());
         return gerados;
@@ -31,11 +31,11 @@ abstract class AbstractMapaAgenda implements ServicoAgenda {
     public EventoAgenda sincronizarHorario(
             HorarioAtendimento horario,
             Long vagaId,
-            String codigoMateria,
-            String nomeMateria,
+            String codigoDisciplina,
+            String nomeDisciplina,
             String nomeMonitor) {
         EventoAgenda evento = AgendaSupport.construirEventoHorario(
-                horario, vagaId, codigoMateria, nomeMateria, nomeMonitor);
+                horario, vagaId, codigoDisciplina, nomeDisciplina, nomeMonitor);
         eventos.put(evento.idExterno(), evento);
         aposAlteracao("sync-horario:" + horario.getId());
         return evento;

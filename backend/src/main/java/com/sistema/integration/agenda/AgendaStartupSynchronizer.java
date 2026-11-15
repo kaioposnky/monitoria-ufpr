@@ -1,12 +1,12 @@
 package com.sistema.integration.agenda;
 
-import com.sistema.entity.Materia;
+import com.sistema.entity.Disciplina;
 import com.sistema.entity.Monitor;
 import com.sistema.entity.Usuario;
 import com.sistema.entity.VagaMonitoria;
 import com.sistema.integration.IntegracaoExecutor;
+import com.sistema.repository.DisciplinaRepository;
 import com.sistema.repository.HorarioAtendimentoRepository;
-import com.sistema.repository.MateriaRepository;
 import com.sistema.repository.MonitorRepository;
 import com.sistema.repository.UsuarioRepository;
 import com.sistema.repository.VagaMonitoriaRepository;
@@ -34,7 +34,7 @@ public class AgendaStartupSynchronizer {
     private final VagaMonitoriaRepository vagaRepository;
     private final HorarioAtendimentoRepository horarioRepository;
     private final MonitorRepository monitorRepository;
-    private final MateriaRepository materiaRepository;
+    private final DisciplinaRepository disciplinaRepository;
     private final UsuarioRepository usuarioRepository;
     private final ServicoAgenda servicoAgenda;
 
@@ -42,13 +42,13 @@ public class AgendaStartupSynchronizer {
             VagaMonitoriaRepository vagaRepository,
             HorarioAtendimentoRepository horarioRepository,
             MonitorRepository monitorRepository,
-            MateriaRepository materiaRepository,
+            DisciplinaRepository disciplinaRepository,
             UsuarioRepository usuarioRepository,
             ServicoAgenda servicoAgenda) {
         this.vagaRepository = vagaRepository;
         this.horarioRepository = horarioRepository;
         this.monitorRepository = monitorRepository;
-        this.materiaRepository = materiaRepository;
+        this.disciplinaRepository = disciplinaRepository;
         this.usuarioRepository = usuarioRepository;
         this.servicoAgenda = servicoAgenda;
     }
@@ -56,8 +56,8 @@ public class AgendaStartupSynchronizer {
     @EventListener(ApplicationReadyEvent.class)
     public void sincronizarCargaInicial() {
         IntegracaoExecutor.executarSemInterromper(log, "carga inicial da agenda", () -> {
-            Map<Long, Materia> materias = materiaRepository.findAll().stream()
-                    .collect(Collectors.toMap(Materia::getId, Function.identity()));
+            Map<Long, Disciplina> disciplinas = disciplinaRepository.findAll().stream()
+                    .collect(Collectors.toMap(Disciplina::getId, Function.identity()));
             Map<Long, VagaMonitoria> vagas = vagaRepository.findAll().stream()
                     .collect(Collectors.toMap(VagaMonitoria::getId, Function.identity()));
             Map<Long, Monitor> monitores = monitorRepository.findAll().stream()
@@ -66,23 +66,23 @@ public class AgendaStartupSynchronizer {
                     .collect(Collectors.toMap(Usuario::getId, Function.identity()));
 
             for (VagaMonitoria vaga : vagas.values()) {
-                Materia materia = materias.get(vaga.getMateriaId());
+                Disciplina disciplina = disciplinas.get(vaga.getDisciplinaId());
                 servicoAgenda.sincronizarVaga(vaga,
-                        materia != null ? materia.getCodigo() : null,
-                        materia != null ? materia.getNome() : null);
+                        disciplina != null ? disciplina.getCodigo() : null,
+                        disciplina != null ? disciplina.getNome() : null);
             }
 
             for (var horario : horarioRepository.findAll()) {
                 Monitor monitor = monitores.get(horario.getMonitorId());
                 if (monitor == null) continue;
                 VagaMonitoria vaga = vagas.get(monitor.getVagaId());
-                Materia materia = vaga != null ? materias.get(vaga.getMateriaId()) : null;
+                Disciplina disciplina = vaga != null ? disciplinas.get(vaga.getDisciplinaId()) : null;
                 Usuario aluno = usuarios.get(monitor.getAlunoId());
                 servicoAgenda.sincronizarHorario(
                         horario,
                         monitor.getVagaId(),
-                        materia != null ? materia.getCodigo() : null,
-                        materia != null ? materia.getNome() : null,
+                        disciplina != null ? disciplina.getCodigo() : null,
+                        disciplina != null ? disciplina.getNome() : null,
                         aluno != null ? aluno.getNome() : "Monitor #" + monitor.getId());
             }
         });

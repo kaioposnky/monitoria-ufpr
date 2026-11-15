@@ -3,9 +3,12 @@ package com.sistema.config;
 public final class CacheNames {
     public static final String CURSOS_LIST = "cursos:list";
     public static final String CURSOS_DETAIL = "cursos:detail";
+    public static final String DISCIPLINAS_LIST = "disciplinas:list";
+    public static final String DISCIPLINAS_DETAIL = "disciplinas:detail";
     public static final String MATERIAS_LIST = "materias:list";
     public static final String MATERIAS_DETAIL = "materias:detail";
-    public static final String CURSO_MATERIAS_LIST = "curso-materias:list";
+    public static final String MATERIAS_BY_DISCIPLINA = "materias:by-disciplina";
+    public static final String CURSO_DISCIPLINAS_LIST = "curso-disciplinas:list";
     public static final String VAGAS_LIST = "vagas:list";
     public static final String VAGAS_DETAIL = "vagas:detail";
     public static final String MONITORES_LIST = "monitores:list";

@@ -58,8 +58,9 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v1/cursos/**",
+                                "/api/v1/disciplinas/**",
                                 "/api/v1/materias/**",
-                                "/api/v1/cursos-materias/**",
+                                "/api/v1/cursos-disciplinas/**",
                                 "/api/v1/vagas-monitoria/**",
                                 "/api/v1/horarios-atendimento/**",
                                 "/api/v1/agenda/**").permitAll()

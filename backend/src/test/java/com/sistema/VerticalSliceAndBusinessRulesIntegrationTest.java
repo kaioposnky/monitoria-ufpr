@@ -68,11 +68,12 @@ class VerticalSliceAndBusinessRulesIntegrationTest {
         MvcResult vagaRes = mockMvc.perform(post("/api/v1/vagas-monitoria")
                         .header("Authorization", "Bearer " + profToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"materiaId\":5,\"professorId\":" + profId
+                        .content("{\"disciplinaId\":5,\"professorId\":" + profId
                                 + ",\"semestre\":\"2026/2\",\"quantidadeVagas\":1,\"tipoVaga\":\"REMUNERADA\","
                                 + "\"requisitos\":\"Aprovado em CM005\",\"descricao\":\"Apoio em Algebra Linear\","
                                 + "\"dataAbertura\":\"" + abertura + "\",\"dataEncerramento\":\"" + encerramento + "\"}"))
                 .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.disciplinaId", is(5)))
                 .andExpect(jsonPath("$.dataAbertura", is(abertura)))
                 .andExpect(jsonPath("$.dataEncerramento", is(encerramento)))
                 .andReturn();
@@ -213,7 +214,7 @@ class VerticalSliceAndBusinessRulesIntegrationTest {
         mockMvc.perform(post("/api/v1/vagas-monitoria")
                         .header("Authorization", "Bearer " + profToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"materiaId\":4,\"professorId\":" + profId
+                        .content("{\"disciplinaId\":4,\"professorId\":" + profId
                                 + ",\"semestre\":\"2026/2\",\"quantidadeVagas\":1,\"tipoVaga\":\"VOLUNTARIA\","
                                 + "\"dataAbertura\":\"" + hoje.plusDays(5) + "\",\"dataEncerramento\":\"" + hoje.plusDays(2) + "\"}"))
                 .andExpect(status().isConflict());
@@ -222,7 +223,7 @@ class VerticalSliceAndBusinessRulesIntegrationTest {
         MvcResult vagaFuturaRes = mockMvc.perform(post("/api/v1/vagas-monitoria")
                         .header("Authorization", "Bearer " + profToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"materiaId\":4,\"professorId\":" + profId
+                        .content("{\"disciplinaId\":4,\"professorId\":" + profId
                                 + ",\"semestre\":\"2026/2\",\"quantidadeVagas\":1,\"tipoVaga\":\"VOLUNTARIA\","
                                 + "\"dataAbertura\":\"" + hoje.plusDays(2) + "\",\"dataEncerramento\":\"" + hoje.plusDays(10) + "\"}"))
                 .andExpect(status().isCreated())
@@ -239,7 +240,7 @@ class VerticalSliceAndBusinessRulesIntegrationTest {
         MvcResult vagaExpiradaRes = mockMvc.perform(post("/api/v1/vagas-monitoria")
                         .header("Authorization", "Bearer " + profToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"materiaId\":4,\"professorId\":" + profId
+                        .content("{\"disciplinaId\":4,\"professorId\":" + profId
                                 + ",\"semestre\":\"2026/2\",\"quantidadeVagas\":1,\"tipoVaga\":\"VOLUNTARIA\","
                                 + "\"dataAbertura\":\"" + hoje.minusDays(10) + "\",\"dataEncerramento\":\"" + hoje.minusDays(1) + "\"}"))
                 .andExpect(status().isCreated())
@@ -281,5 +282,65 @@ class VerticalSliceAndBusinessRulesIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"CANCELADA\"}"))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void catalogoMantemCursosDisciplinasNeNMaterias1N() throws Exception {
+        // Seed V5: disciplinas, cursos-disciplinas e matérias vinculadas 1:N às disciplinas
+        mockMvc.perform(get("/api/v1/disciplinas"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].codigo", is("CI1055")));
+
+        mockMvc.perform(get("/api/v1/cursos-disciplinas"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].cursoId").exists())
+                .andExpect(jsonPath("$[0].disciplinaId").exists());
+
+        mockMvc.perform(get("/api/v1/materias/disciplina/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].disciplinaId", is(1)));
+
+        JsonNode adminAuth = login("coordenacao.dinf@ufpr.br", "monitoria123");
+        String adminToken = adminAuth.get("token").asText();
+
+        // Criar Matéria vinculada a disciplina inexistente retorna 404
+        mockMvc.perform(post("/api/v1/materias")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"disciplinaId\":99999,\"nome\":\"Tópico Inválido\",\"descricao\":\"Teste\"}"))
+                .andExpect(status().isNotFound());
+
+        // Criar nova Disciplina, vincular a Curso (N:N) e cadastrar duas Matérias (1:N)
+        MvcResult discRes = mockMvc.perform(post("/api/v1/disciplinas")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"codigo\":\"CI1062\",\"nome\":\"Grafos\",\"departamento\":\"DInf\"}"))
+                .andExpect(status().isCreated())
+                .andReturn();
+        long discId = mapper.readTree(discRes.getResponse().getContentAsString()).get("id").asLong();
+
+        mockMvc.perform(post("/api/v1/cursos-disciplinas/1/" + discId)
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.disciplinaId", is((int) discId)));
+
+        mockMvc.perform(post("/api/v1/materias")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"disciplinaId\":" + discId + ",\"nome\":\"Busca em Largura e Profundidade\",\"descricao\":\"BFS e DFS\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.disciplinaId", is((int) discId)));
+
+        mockMvc.perform(post("/api/v1/materias")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"disciplinaId\":" + discId + ",\"nome\":\"Caminho Mínimo\",\"descricao\":\"Dijkstra e Bellman-Ford\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.disciplinaId", is((int) discId)));
+
+        MvcResult matsRes = mockMvc.perform(get("/api/v1/materias/disciplina/" + discId))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(mapper.readTree(matsRes.getResponse().getContentAsString()).size()).isEqualTo(2);
     }
 }

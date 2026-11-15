@@ -40,7 +40,7 @@ public class VagaMonitoriaController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("@accessGuard.canCreateVacancy(#dto.professorId(), authentication)")
-    @Operation(summary = "Criar vaga de monitoria", description = "Cadastra uma nova vaga de monitoria vinculada a uma matéria e a um professor.")
+    @Operation(summary = "Criar vaga de monitoria", description = "Cadastra uma nova vaga de monitoria vinculada a uma disciplina e a um professor.")
     public VagaMonitoriaResponseDTO criar(@Valid @RequestBody CadastroVagaMonitoriaDTO dto) {
         return service.criar(dto);
     }

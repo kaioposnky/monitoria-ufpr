@@ -8,7 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 
 public record CadastroVagaMonitoriaDTO(
-        @NotNull Long materiaId,
+        @NotNull Long disciplinaId,
         @NotNull Long professorId,
         @NotBlank String semestre,
         @NotNull @Min(1) Integer quantidadeVagas,
@@ -18,9 +18,9 @@ public record CadastroVagaMonitoriaDTO(
         LocalDate dataAbertura,
         LocalDate dataEncerramento
 ) {
-    public CadastroVagaMonitoriaDTO(Long materiaId, Long professorId, String semestre,
+    public CadastroVagaMonitoriaDTO(Long disciplinaId, Long professorId, String semestre,
                                     Integer quantidadeVagas, VagaMonitoria.TipoVaga tipoVaga,
                                     String requisitos, String descricao) {
-        this(materiaId, professorId, semestre, quantidadeVagas, tipoVaga, requisitos, descricao, null, null);
+        this(disciplinaId, professorId, semestre, quantidadeVagas, tipoVaga, requisitos, descricao, null, null);
     }
 }

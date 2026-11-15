@@ -60,11 +60,11 @@ final class AgendaSupport {
                 || vaga.getStatus() == VagaMonitoria.StatusVaga.EM_SELECAO;
     }
 
-    static List<EventoAgenda> construirEventosVaga(VagaMonitoria vaga, String codigoMateria, String nomeMateria) {
+    static List<EventoAgenda> construirEventosVaga(VagaMonitoria vaga, String codigoDisciplina, String nomeDisciplina) {
         if (!vagaPublicavel(vaga)) {
             return List.of();
         }
-        String disciplina = formatDisciplina(codigoMateria, nomeMateria, vaga.getMateriaId());
+        String disciplina = formatDisciplina(codigoDisciplina, nomeDisciplina, vaga.getDisciplinaId());
         List<EventoAgenda> eventos = new ArrayList<>();
         if (vaga.getDataAbertura() != null) {
             eventos.add(new EventoAgenda(
@@ -100,10 +100,10 @@ final class AgendaSupport {
     static EventoAgenda construirEventoHorario(
             HorarioAtendimento horario,
             Long vagaId,
-            String codigoMateria,
-            String nomeMateria,
+            String codigoDisciplina,
+            String nomeDisciplina,
             String nomeMonitor) {
-        String disciplina = formatDisciplina(codigoMateria, nomeMateria, vagaId);
+        String disciplina = formatDisciplina(codigoDisciplina, nomeDisciplina, vagaId);
         String local = horario.getLinkReuniao() != null && !horario.getLinkReuniao().isBlank()
                 ? horario.getLocalAtendimento() + " (" + horario.getLinkReuniao() + ")"
                 : horario.getLocalAtendimento();

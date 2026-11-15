@@ -13,14 +13,18 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/materias")
-@Tag(name = "Matérias", description = "Cadastro e consulta de disciplinas/matérias")
+@Tag(name = "Matérias", description = "Cadastro e consulta de matérias/tópicos vinculados 1:N às disciplinas")
 public class MateriaController {
     private final MateriaService service;
     public MateriaController(MateriaService service) { this.service = service; }
 
     @GetMapping
-    @Operation(summary = "Listar matérias", description = "Retorna todas as matérias cadastradas.")
+    @Operation(summary = "Listar matérias", description = "Retorna todas as matérias (conteúdos) cadastradas.")
     public List<MateriaResponseDTO> listar() { return service.listar(); }
+
+    @GetMapping("/disciplina/{disciplinaId}")
+    @Operation(summary = "Listar matérias por disciplina", description = "Retorna as matérias/tópicos pertencentes a uma disciplina.")
+    public List<MateriaResponseDTO> porDisciplina(@PathVariable Long disciplinaId) { return service.porDisciplina(disciplinaId); }
 
     @GetMapping("/{id}")
     @Operation(summary = "Buscar matéria por ID", description = "Retorna os detalhes de uma matéria específica.")
@@ -29,7 +33,7 @@ public class MateriaController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Cadastrar matéria", description = "Cria uma nova matéria.")
+    @Operation(summary = "Cadastrar matéria", description = "Cria uma nova matéria vinculada a uma disciplina.")
     public MateriaResponseDTO criar(@Valid @RequestBody CadastroMateriaDTO dto) { return service.criar(dto); }
 
     @PutMapping("/{id}")

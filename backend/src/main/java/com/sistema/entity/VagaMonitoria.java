@@ -28,8 +28,8 @@ public class VagaMonitoria {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "materia_id", nullable = false)
-    private Long materiaId;
+    @Column(name = "disciplina_id", nullable = false)
+    private Long disciplinaId;
 
     @Column(name = "professor_id", nullable = false)
     private Long professorId;
@@ -65,15 +65,15 @@ public class VagaMonitoria {
     protected VagaMonitoria() {
     }
 
-    public VagaMonitoria(Long materiaId, Long professorId, String semestre, Integer quantidadeVagas,
+    public VagaMonitoria(Long disciplinaId, Long professorId, String semestre, Integer quantidadeVagas,
                          TipoVaga tipoVaga, String requisitos, String descricao) {
-        this(materiaId, professorId, semestre, quantidadeVagas, tipoVaga, requisitos, descricao, null, null);
+        this(disciplinaId, professorId, semestre, quantidadeVagas, tipoVaga, requisitos, descricao, null, null);
     }
 
-    public VagaMonitoria(Long materiaId, Long professorId, String semestre, Integer quantidadeVagas,
+    public VagaMonitoria(Long disciplinaId, Long professorId, String semestre, Integer quantidadeVagas,
                          TipoVaga tipoVaga, String requisitos, String descricao,
                          LocalDate dataAbertura, LocalDate dataEncerramento) {
-        this.materiaId = materiaId;
+        this.disciplinaId = disciplinaId;
         this.professorId = professorId;
         this.semestre = semestre;
         this.quantidadeVagas = quantidadeVagas;
@@ -85,7 +85,7 @@ public class VagaMonitoria {
     }
 
     public Long getId() { return id; }
-    public Long getMateriaId() { return materiaId; }
+    public Long getDisciplinaId() { return disciplinaId; }
     public Long getProfessorId() { return professorId; }
     public String getSemestre() { return semestre; }
     public Integer getQuantidadeVagas() { return quantidadeVagas; }

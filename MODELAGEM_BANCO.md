@@ -1,17 +1,16 @@
-# Modelagem do Banco de Dados
+# Modelagem do banco de dados
 
-Esquema relacional criado pelas migrações Flyway `V1` a `V4` em `backend/src/main/resources/db/migration/`.
-
-## 1. Diagrama Entidade-Relacionamento
+## 1. Diagrama entidade-relacionamento
 
 ```mermaid
 erDiagram
-    CURSO ||--o{ CURSO_MATERIA : possui
-    MATERIA ||--o{ CURSO_MATERIA : pertence
+    CURSO ||--o{ CURSO_DISCIPLINA : possui
+    DISCIPLINA ||--o{ CURSO_DISCIPLINA : pertence
+    DISCIPLINA ||--o{ MATERIA : "contem (1:N)"
     CURSO ||--o{ USUARIO : matricula
 
     USUARIO ||--o{ VAGA_MONITORIA : "cria (Professor)"
-    MATERIA ||--o{ VAGA_MONITORIA : "tem vagas"
+    DISCIPLINA ||--o{ VAGA_MONITORIA : "tem vagas"
 
     USUARIO ||--o{ CANDIDATURA : "submete (Aluno)"
     VAGA_MONITORIA ||--o{ CANDIDATURA : "recebe"
@@ -42,21 +41,28 @@ erDiagram
         timestamp criado_em
     }
 
-    MATERIA {
+    DISCIPLINA {
         bigint id PK
         varchar codigo UK
         varchar nome
         varchar departamento
     }
 
-    CURSO_MATERIA {
+    CURSO_DISCIPLINA {
         bigint curso_id PK,FK
-        bigint materia_id PK,FK
+        bigint disciplina_id PK,FK
+    }
+
+    MATERIA {
+        bigint id PK
+        bigint disciplina_id FK
+        varchar nome
+        text descricao
     }
 
     VAGA_MONITORIA {
         bigint id PK
-        bigint materia_id FK
+        bigint disciplina_id FK
         bigint professor_id FK
         varchar semestre "ex: 2026/2"
         int quantidade_vagas
@@ -116,7 +122,7 @@ erDiagram
     }
 ```
 
-## 2. Dicionário das tabelas (`V1`–`V4`)
+## 2. Dicionário das tabelas (`V1`–`V5`)
 
 ### `cursos`
 
@@ -127,7 +133,9 @@ erDiagram
 | `nome` | `VARCHAR(150) NOT NULL` | |
 | `setor` | `VARCHAR(100) DEFAULT 'Setor de Ciências Exatas'` | |
 
-### `materias`
+### `disciplinas`
+
+Criada na `V5` para separar a unidade curricular (`disciplinas`, N:N com `cursos` e alvo de `vagas_monitoria`) dos tópicos/conteúdos (`materias`, 1:N sob `disciplinas`).
 
 | Coluna | Tipo e restrições | Observação |
 | --- | --- | --- |
@@ -136,9 +144,20 @@ erDiagram
 | `nome` | `VARCHAR(150) NOT NULL` | |
 | `departamento` | `VARCHAR(100) NOT NULL` | Ex.: `DInf - Departamento de Informática` |
 
-### `cursos_materias`
+### `cursos_disciplinas`
 
-Associação N:N com chave primária composta `(curso_id, materia_id)`. Ambas são `BIGINT NOT NULL` referenciando `cursos(id)` e `materias(id)` com `ON DELETE CASCADE`.
+Associação N:N (criada na `V5` substituindo `cursos_materias`) com chave primária composta `(curso_id, disciplina_id)`. Ambas são `BIGINT NOT NULL` referenciando `cursos(id)` e `disciplinas(id)` com `ON DELETE CASCADE`.
+
+### `materias`
+
+Reestruturada na `V5` como tópicos/conteúdos pertencentes a uma única disciplina (`Disciplina` 1:N `Materia`).
+
+| Coluna | Tipo e restrições | Observação |
+| --- | --- | --- |
+| `id` | `BIGSERIAL PRIMARY KEY` | |
+| `disciplina_id` | `BIGINT NOT NULL REFERENCES disciplinas(id) ON DELETE CASCADE` | FK adicionada na `V5` (`fk_materias_disciplina`) |
+| `nome` | `VARCHAR(150) NOT NULL` | Título da matéria/conteúdo da disciplina |
+| `descricao` | `TEXT` | Descrição opcional do tópico |
 
 ### `usuarios`
 
@@ -159,7 +178,7 @@ Associação N:N com chave primária composta `(curso_id, materia_id)`. Ambas s�
 | Coluna | Tipo e restrições | Observação |
 | --- | --- | --- |
 | `id` | `BIGSERIAL PRIMARY KEY` | |
-| `materia_id` | `BIGINT NOT NULL REFERENCES materias(id) ON DELETE RESTRICT` | |
+| `disciplina_id` | `BIGINT NOT NULL REFERENCES disciplinas(id) ON DELETE RESTRICT` | Migrada de `materia_id` na `V5` (`fk_vagas_disciplina`) |
 | `professor_id` | `BIGINT NOT NULL REFERENCES usuarios(id) ON DELETE RESTRICT` | |
 | `semestre` | `VARCHAR(10) NOT NULL` | Ex.: `2026/2` |
 | `quantidade_vagas` | `INT NOT NULL DEFAULT 1 CHECK (quantidade_vagas > 0)` | |
@@ -225,6 +244,6 @@ Associação N:N com chave primária composta `(curso_id, materia_id)`. Ambas s�
 | `feedback_professor` | `TEXT` | |
 | `criado_em` | `TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP` | |
 
-## 3. Índices criados na `V1`
+## 3. Índices criados (`V1` e `V5`)
 
-`idx_usuarios_email`, `idx_usuarios_matricula`, `idx_vagas_materia`, `idx_vagas_semestre`, `idx_candidaturas_vaga`, `idx_candidaturas_aluno`, `idx_monitores_aluno`, `idx_horarios_monitor` e `idx_atividades_monitor`.
+`idx_usuarios_email`, `idx_usuarios_matricula`, `idx_vagas_disciplina` (`V5`, substituindo `idx_vagas_materia`), `idx_materias_disciplina` (`V5`), `idx_vagas_semestre`, `idx_candidaturas_vaga`, `idx_candidaturas_aluno`, `idx_monitores_aluno`, `idx_horarios_monitor` e `idx_atividades_monitor`.

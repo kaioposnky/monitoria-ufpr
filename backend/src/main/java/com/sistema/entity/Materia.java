@@ -12,22 +12,32 @@ import jakarta.persistence.Table;
 public class Materia {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(nullable = false, unique = true, length = 20)
-    private String codigo;
+
+    @Column(name = "disciplina_id", nullable = false)
+    private Long disciplinaId;
+
     @Column(nullable = false, length = 150)
     private String nome;
-    @Column(nullable = false, length = 100)
-    private String departamento;
+
+    @Column(columnDefinition = "TEXT")
+    private String descricao;
 
     protected Materia() {}
-    public Materia(String codigo, String nome, String departamento) {
-        this.codigo = codigo; this.nome = nome; this.departamento = departamento;
+
+    public Materia(Long disciplinaId, String nome, String descricao) {
+        this.disciplinaId = disciplinaId;
+        this.nome = nome;
+        this.descricao = descricao;
     }
+
     public Long getId() { return id; }
-    public String getCodigo() { return codigo; }
+    public Long getDisciplinaId() { return disciplinaId; }
     public String getNome() { return nome; }
-    public String getDepartamento() { return departamento; }
-    public void atualizar(String codigo, String nome, String departamento) {
-        this.codigo = codigo; this.nome = nome; this.departamento = departamento;
+    public String getDescricao() { return descricao; }
+
+    public void atualizar(Long disciplinaId, String nome, String descricao) {
+        this.disciplinaId = disciplinaId;
+        this.nome = nome;
+        this.descricao = descricao;
     }
 }

@@ -36,7 +36,7 @@ public class CursoService {
     @Caching(evict = {
         @CacheEvict(cacheNames = CacheNames.CURSOS_LIST, allEntries = true),
         @CacheEvict(cacheNames = CacheNames.CURSOS_DETAIL, key = "#id"),
-        @CacheEvict(cacheNames = CacheNames.CURSO_MATERIAS_LIST, allEntries = true)
+        @CacheEvict(cacheNames = CacheNames.CURSO_DISCIPLINAS_LIST, allEntries = true)
     })
     @Transactional public void excluir(Long id) { if (!repository.existsById(id)) throw new RecursoNaoEncontradoException("Curso não encontrado."); repository.deleteById(id); }
 }

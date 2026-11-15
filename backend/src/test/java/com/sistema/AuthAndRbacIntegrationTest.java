@@ -41,6 +41,12 @@ class AuthAndRbacIntegrationTest {
     void catalogoPublicoERotasProtegidasExigemAutenticacao() throws Exception {
         mockMvc.perform(get("/api/v1/cursos"))
                 .andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/disciplinas"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/materias"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/cursos-disciplinas"))
+                .andExpect(status().isOk());
         mockMvc.perform(get("/api/v1/vagas-monitoria"))
                 .andExpect(status().isOk());
         mockMvc.perform(get("/api/v1/horarios-atendimento"))
@@ -49,6 +55,11 @@ class AuthAndRbacIntegrationTest {
         mockMvc.perform(post("/api/v1/cursos")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"codigo\":\"TEST\",\"nome\":\"Teste\",\"setor\":\"Exatas\"}"))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(post("/api/v1/disciplinas")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"codigo\":\"TEST1\",\"nome\":\"Teste\",\"departamento\":\"DInf\"}"))
                 .andExpect(status().isUnauthorized());
 
         mockMvc.perform(get("/api/v1/usuarios"))
@@ -121,21 +132,33 @@ class AuthAndRbacIntegrationTest {
         String profToken = profAuth.get("token").asText();
         long profId = profAuth.get("usuario").get("id").asLong();
 
-        // Professor nao pode cadastrar cursos (exclusivo ADMIN)
+        // Professor nao pode cadastrar cursos nem disciplinas/materias (exclusivo ADMIN)
         mockMvc.perform(post("/api/v1/cursos")
                         .header("Authorization", "Bearer " + profToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"codigo\":\"FIS\",\"nome\":\"Física\",\"setor\":\"Exatas\"}"))
                 .andExpect(status().isForbidden());
 
+        mockMvc.perform(post("/api/v1/disciplinas")
+                        .header("Authorization", "Bearer " + profToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"codigo\":\"CF001\",\"nome\":\"Física 1\",\"departamento\":\"DFis\"}"))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/api/v1/materias")
+                        .header("Authorization", "Bearer " + profToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"disciplinaId\":1,\"nome\":\"Ponteiros\",\"descricao\":\"Alocação\"}"))
+                .andExpect(status().isForbidden());
+
         // Professor cria vaga para si mesmo
         mockMvc.perform(post("/api/v1/vagas-monitoria")
                         .header("Authorization", "Bearer " + profToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"materiaId\":2,\"professorId\":" + profId + ",\"semestre\":\"2026/2\",\"quantidadeVagas\":1,\"tipoVaga\":\"VOLUNTARIA\",\"requisitos\":\"Aprovado\",\"descricao\":\"Apoio\"}"))
+                        .content("{\"disciplinaId\":2,\"professorId\":" + profId + ",\"semestre\":\"2026/2\",\"quantidadeVagas\":1,\"tipoVaga\":\"VOLUNTARIA\",\"requisitos\":\"Aprovado\",\"descricao\":\"Apoio\"}"))
                 .andExpect(status().isCreated());
 
-        // Admin cadastra curso e novo usuario com senha hash
+        // Admin cadastra curso, disciplina, matéria e novo usuario com senha hash
         JsonNode adminAuth = login("coordenacao.dinf@ufpr.br", "monitoria123");
         String adminToken = adminAuth.get("token").asText();
 
@@ -145,6 +168,22 @@ class AuthAndRbacIntegrationTest {
                         .content("{\"codigo\":\"FIS\",\"nome\":\"Física\",\"setor\":\"Setor de Ciências Exatas\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.codigo", is("FIS")));
+
+        MvcResult discRes = mockMvc.perform(post("/api/v1/disciplinas")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"codigo\":\"CF001\",\"nome\":\"Física 1\",\"departamento\":\"DFis\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.codigo", is("CF001")))
+                .andReturn();
+        long discId = mapper.readTree(discRes.getResponse().getContentAsString()).get("id").asLong();
+
+        mockMvc.perform(post("/api/v1/materias")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"disciplinaId\":" + discId + ",\"nome\":\"Cinemática\",\"descricao\":\"Movimento retilíneo e circular\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.disciplinaId", is((int) discId)));
 
         mockMvc.perform(post("/api/v1/usuarios")
                         .header("Authorization", "Bearer " + adminToken)

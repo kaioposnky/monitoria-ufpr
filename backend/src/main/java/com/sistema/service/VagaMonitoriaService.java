@@ -5,13 +5,13 @@ import com.sistema.dto.request.AtualizacaoParcialVagaMonitoriaDTO;
 import com.sistema.dto.request.AtualizacaoVagaMonitoriaDTO;
 import com.sistema.dto.request.CadastroVagaMonitoriaDTO;
 import com.sistema.dto.response.VagaMonitoriaResponseDTO;
-import com.sistema.entity.Materia;
+import com.sistema.entity.Disciplina;
 import com.sistema.entity.VagaMonitoria;
 import com.sistema.exception.RecursoNaoEncontradoException;
 import com.sistema.exception.RegraNegocioException;
 import com.sistema.integration.IntegracaoExecutor;
 import com.sistema.integration.agenda.ServicoAgenda;
-import com.sistema.repository.MateriaRepository;
+import com.sistema.repository.DisciplinaRepository;
 import com.sistema.repository.UsuarioRepository;
 import com.sistema.repository.VagaMonitoriaRepository;
 import org.slf4j.Logger;
@@ -31,17 +31,17 @@ public class VagaMonitoriaService {
     private static final Logger log = LoggerFactory.getLogger(VagaMonitoriaService.class);
 
     private final VagaMonitoriaRepository repository;
-    private final MateriaRepository materiaRepository;
+    private final DisciplinaRepository disciplinaRepository;
     private final UsuarioRepository usuarioRepository;
     private final ServicoAgenda servicoAgenda;
 
     public VagaMonitoriaService(
             VagaMonitoriaRepository repository,
-            MateriaRepository materiaRepository,
+            DisciplinaRepository disciplinaRepository,
             UsuarioRepository usuarioRepository,
             ServicoAgenda servicoAgenda) {
         this.repository = repository;
-        this.materiaRepository = materiaRepository;
+        this.disciplinaRepository = disciplinaRepository;
         this.usuarioRepository = usuarioRepository;
         this.servicoAgenda = servicoAgenda;
     }
@@ -61,15 +61,15 @@ public class VagaMonitoriaService {
     @CacheEvict(cacheNames = CacheNames.VAGAS_LIST, allEntries = true)
     @Transactional
     public VagaMonitoriaResponseDTO criar(CadastroVagaMonitoriaDTO dto) {
-        Materia materia = materiaRepository.findById(dto.materiaId())
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Matéria não encontrada."));
+        Disciplina disciplina = disciplinaRepository.findById(dto.disciplinaId())
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Disciplina não encontrada."));
         if (!usuarioRepository.existsById(dto.professorId())) {
             throw new RecursoNaoEncontradoException("Professor não encontrado.");
         }
         validarPeriodo(dto.dataAbertura(), dto.dataEncerramento());
 
         VagaMonitoria salva = repository.save(new VagaMonitoria(
-                dto.materiaId(),
+                dto.disciplinaId(),
                 dto.professorId(),
                 dto.semestre(),
                 dto.quantidadeVagas(),
@@ -78,7 +78,7 @@ public class VagaMonitoriaService {
                 dto.descricao(),
                 dto.dataAbertura(),
                 dto.dataEncerramento()));
-        sincronizarAgenda(salva, materia);
+        sincronizarAgenda(salva, disciplina);
         return VagaMonitoriaResponseDTO.from(salva);
     }
 
@@ -99,7 +99,7 @@ public class VagaMonitoriaService {
                 dto.status(),
                 dto.dataAbertura(),
                 dto.dataEncerramento());
-        sincronizarAgenda(vaga, materiaRepository.findById(vaga.getMateriaId()).orElse(null));
+        sincronizarAgenda(vaga, disciplinaRepository.findById(vaga.getDisciplinaId()).orElse(null));
         return VagaMonitoriaResponseDTO.from(vaga);
     }
 
@@ -123,7 +123,7 @@ public class VagaMonitoriaService {
                 dto.status() == null ? vaga.getStatus() : dto.status(),
                 abertura,
                 encerramento);
-        sincronizarAgenda(vaga, materiaRepository.findById(vaga.getMateriaId()).orElse(null));
+        sincronizarAgenda(vaga, disciplinaRepository.findById(vaga.getDisciplinaId()).orElse(null));
         return VagaMonitoriaResponseDTO.from(vaga);
     }
 
@@ -153,9 +153,9 @@ public class VagaMonitoriaService {
         }
     }
 
-    private void sincronizarAgenda(VagaMonitoria vaga, Materia materia) {
-        String codigo = materia != null ? materia.getCodigo() : null;
-        String nome = materia != null ? materia.getNome() : null;
+    private void sincronizarAgenda(VagaMonitoria vaga, Disciplina disciplina) {
+        String codigo = disciplina != null ? disciplina.getCodigo() : null;
+        String nome = disciplina != null ? disciplina.getNome() : null;
         IntegracaoExecutor.executarSemInterromper(log, "sincronizar vaga " + vaga.getId(),
                 () -> servicoAgenda.sincronizarVaga(vaga, codigo, nome));
     }

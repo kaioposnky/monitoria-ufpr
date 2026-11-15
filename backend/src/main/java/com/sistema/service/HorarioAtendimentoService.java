@@ -4,8 +4,8 @@ import com.sistema.config.CacheNames;
 import com.sistema.dto.request.AtualizacaoHorarioAtendimentoDTO;
 import com.sistema.dto.request.CadastroHorarioAtendimentoDTO;
 import com.sistema.dto.response.HorarioAtendimentoResponseDTO;
+import com.sistema.entity.Disciplina;
 import com.sistema.entity.HorarioAtendimento;
-import com.sistema.entity.Materia;
 import com.sistema.entity.Monitor;
 import com.sistema.entity.Usuario;
 import com.sistema.entity.VagaMonitoria;
@@ -13,8 +13,8 @@ import com.sistema.exception.RecursoNaoEncontradoException;
 import com.sistema.exception.RegraNegocioException;
 import com.sistema.integration.IntegracaoExecutor;
 import com.sistema.integration.agenda.ServicoAgenda;
+import com.sistema.repository.DisciplinaRepository;
 import com.sistema.repository.HorarioAtendimentoRepository;
-import com.sistema.repository.MateriaRepository;
 import com.sistema.repository.MonitorRepository;
 import com.sistema.repository.UsuarioRepository;
 import com.sistema.repository.VagaMonitoriaRepository;
@@ -37,7 +37,7 @@ public class HorarioAtendimentoService {
     private final HorarioAtendimentoRepository repository;
     private final MonitorRepository monitorRepository;
     private final VagaMonitoriaRepository vagaRepository;
-    private final MateriaRepository materiaRepository;
+    private final DisciplinaRepository disciplinaRepository;
     private final UsuarioRepository usuarioRepository;
     private final ServicoAgenda servicoAgenda;
 
@@ -45,13 +45,13 @@ public class HorarioAtendimentoService {
             HorarioAtendimentoRepository repository,
             MonitorRepository monitorRepository,
             VagaMonitoriaRepository vagaRepository,
-            MateriaRepository materiaRepository,
+            DisciplinaRepository disciplinaRepository,
             UsuarioRepository usuarioRepository,
             ServicoAgenda servicoAgenda) {
         this.repository = repository;
         this.monitorRepository = monitorRepository;
         this.vagaRepository = vagaRepository;
-        this.materiaRepository = materiaRepository;
+        this.disciplinaRepository = disciplinaRepository;
         this.usuarioRepository = usuarioRepository;
         this.servicoAgenda = servicoAgenda;
     }
@@ -130,13 +130,13 @@ public class HorarioAtendimentoService {
     private void sincronizarAgenda(HorarioAtendimento horario, Monitor monitor) {
         IntegracaoExecutor.executarSemInterromper(log, "sincronizar horário " + horario.getId(), () -> {
             VagaMonitoria vaga = vagaRepository.findById(monitor.getVagaId()).orElse(null);
-            Materia materia = vaga != null ? materiaRepository.findById(vaga.getMateriaId()).orElse(null) : null;
+            Disciplina disciplina = vaga != null ? disciplinaRepository.findById(vaga.getDisciplinaId()).orElse(null) : null;
             Usuario aluno = usuarioRepository.findById(monitor.getAlunoId()).orElse(null);
             servicoAgenda.sincronizarHorario(
                     horario,
                     monitor.getVagaId(),
-                    materia != null ? materia.getCodigo() : null,
-                    materia != null ? materia.getNome() : null,
+                    disciplina != null ? disciplina.getCodigo() : null,
+                    disciplina != null ? disciplina.getNome() : null,
                     aluno != null ? aluno.getNome() : "Monitor #" + monitor.getId());
         });
     }

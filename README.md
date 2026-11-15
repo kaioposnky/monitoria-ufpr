@@ -11,8 +11,8 @@ Estrutura: API REST em Spring Boot organizada em camadas (com `Notificador` e `S
 - [docs/arquitetura.md](docs/arquitetura.md): domínio, responsabilidades, estrutura das camadas, endpoints, integrações externas e cenários de evolução.
 - [docs/tradeoffs.md](docs/tradeoffs.md): comparação entre alternativas arquiteturais.
 - [docs/adr/](docs/adr): decisões arquiteturais (`ADR-001` a `ADR-004`).
-- [diagramas/](diagramas): diagramas PlantUML (`classes.puml`, `sequencia.puml`, `comunicacao.puml`, `componentes.puml`).
-- [MODELAGEM_BANCO.md](MODELAGEM_BANCO.md): esquema relacional e dicionário de dados (`V1` a `V4`).
+- [diagramas/](diagramas): diagramas Excalidraw (`classes.excalidraw`, `sequencia.excalidraw`, `comunicacao.excalidraw`, `componentes.excalidraw`).
+- [MODELAGEM_BANCO.md](MODELAGEM_BANCO.md): esquema relacional e dicionário de dados (`V1` a `V5`).
 - [backend/](backend) e [frontend/](frontend): código-fonte da API e da SPA.
 
 Notas técnicas por módulo: [autenticacao-rbac-swagger.md](backend/docs/autenticacao-rbac-swagger.md), [cache.md](backend/docs/cache.md), [frontend/AGENTS.md](frontend/AGENTS.md), [CONTINUIDADE.md](frontend/docs/CONTINUIDADE.md), [DECISOES.md](frontend/docs/DECISOES.md) e [INTEGRACAO_ESCRITA_ADMIN.md](frontend/docs/INTEGRACAO_ESCRITA_ADMIN.md).
@@ -22,7 +22,7 @@ Notas técnicas por módulo: [autenticacao-rbac-swagger.md](backend/docs/autenti
 | Parte | O que usa | Notas |
 | --- | --- | --- |
 | Backend | Java 21, Spring Boot 4.1.2, Maven | Pacote raiz `com.sistema` (`controller`, `service`, `repository`, `entity`, `dto`, `security`, `integration`, `exception`, `config`) |
-| Banco | PostgreSQL (padrão) ou H2 (`dev` e `test`) | `dev` e PostgreSQL usam Flyway (`V1`–`V4`); `test` usa `ddl-auto=create-drop` |
+| Banco | PostgreSQL (padrão) ou H2 (`dev` e `test`) | `dev` e PostgreSQL usam Flyway (`V1`–`V5`); `test` usa `ddl-auto=create-drop` |
 | Segurança | Spring Security, JWT (HMAC-SHA256), BCrypt | Autenticação stateless via `Authorization: Bearer` e RBAC no `AccessGuard` |
 | Cache | Spring Cache (`simple` / `ConcurrentMapCacheManager`) | Cache-aside em memória para catálogo, vagas, monitores e horários |
 | Integrações | `Notificador`, `ServicoAgenda` | Selecionáveis via `app.integracoes.*` (`fake`/`email`, `simulada`/`ics`) |
@@ -41,7 +41,7 @@ npm --prefix frontend install
 npm run start:all
 ```
 
-O backend sobe em `http://localhost:8080` com H2 em memória, aplica `V1`–`V4` e cria usuários de teste (senha `monitoria123`). O frontend fica em `http://localhost:5173`.
+O backend sobe em `http://localhost:8080` com H2 em memória, aplica `V1`–`V5` e cria usuários de teste (senha `monitoria123`). O frontend fica em `http://localhost:5173`.
 
 Só o backend:
 
