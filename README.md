@@ -10,7 +10,7 @@ Estrutura: API REST em Spring Boot organizada em camadas (com `Notificador` e `S
 - [docs/requisitos.md](docs/requisitos.md): contexto, atores, requisitos funcionais (`RF01` a `RF08`), restrições e 3 ASRs.
 - [docs/arquitetura.md](docs/arquitetura.md): domínio, responsabilidades, estrutura das camadas, endpoints, integrações externas e cenários de evolução.
 - [docs/tradeoffs.md](docs/tradeoffs.md): comparação entre alternativas arquiteturais.
-- [docs/adr/](docs/adr): decisões arquiteturais (`ADR-001` a `ADR-004`).
+- [docs/adr/](docs/adr): decisões arquiteturais (`ADR-001` a `ADR-007`).
 - [diagramas/](diagramas): diagramas Excalidraw (`classes.excalidraw`, `sequencia.excalidraw`, `comunicacao.excalidraw`, `componentes.excalidraw`).
 - [MODELAGEM_BANCO.md](MODELAGEM_BANCO.md): esquema relacional e dicionário de dados (`V1` a `V5`).
 - [backend/](backend) e [frontend/](frontend): código-fonte da API e da SPA.
