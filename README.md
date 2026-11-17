@@ -7,7 +7,7 @@ Estrutura: API REST em Spring Boot organizada em camadas (com `Notificador` e `S
 ## Arquivos do projeto
 
 - [especificacao_da_prof.md](especificacao_da_prof.md): enunciado da disciplina.
-- [docs/requisitos.md](docs/requisitos.md): contexto, atores, requisitos funcionais (`RF01` a `RF08`), restrições e 3 ASRs.
+- [docs/requisitos.md](docs/requisitos.md): contexto, atores, requisitos funcionais (`RF01` a `RF08`), requisitos de qualidade (`RQ01` a `RQ07`, incluindo 3 ASRs) e restrições (`RT01` a `RT03`).
 - [docs/arquitetura.md](docs/arquitetura.md): domínio, responsabilidades, estrutura das camadas, endpoints, integrações externas e cenários de evolução.
 - [docs/tradeoffs.md](docs/tradeoffs.md): comparação entre alternativas arquiteturais.
 - [docs/adr/](docs/adr): decisões arquiteturais (`ADR-001` a `ADR-007`).
