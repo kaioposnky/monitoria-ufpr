@@ -81,9 +81,9 @@ frontend/
 
 | Pasta | Responsabilidade |
 |---|---|
-| `app` | Conectar as páginas às rotas e guardas de acesso. |
-| `pages/NomePage` | Coordenar os dados e compor a tela de uma rota. |
-| `components/Nome` | Encapsular apresentação e interação reutilizável ou específica de um fluxo. |
-| `features/assunto` | Concentrar tipos compartilhados, consultas, mutações e regras do assunto. |
-| `shared` | Concentrar infraestrutura e comportamento transversal não visual. |
-| `styles` | Concentrar os estilos comuns da interface. |
+| app | Conectar as páginas às rotas e guardas de acesso. |
+| pages/NomePage | Coordenar os dados e compor a tela de uma rota. |
+| components/Nome | Encapsular apresentação e interação reutilizável ou específica de um fluxo. |
+| features/assunto | Concentrar tipos compartilhados, consultas, mutações e regras do assunto. |
+| shared | Concentrar infraestrutura e comportamento transversal não visual. |
+| styles | Concentrar os estilos comuns da interface. |
