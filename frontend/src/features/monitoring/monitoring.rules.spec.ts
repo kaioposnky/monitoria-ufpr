@@ -1,4 +1,5 @@
 import {
+  applicationUnavailableReason,
   displayOptional,
   formatDateBr,
   formatSubjectLabel,
@@ -61,6 +62,17 @@ describe('monitoring.rules', () => {
 
     expect(formatDateBr('2026-08-05')).toBe('05/08/2026');
     expect(formatDateBr(null)).toBe('Não informada');
+  });
+
+  it('aceita inscrições nas datas limite no fuso da UFPR e rejeita fora do período', () => {
+    const vacancy = { status: 'ABERTA', openingDate: '2026-08-01', closingDate: '2026-08-02' };
+    const at = (time: string) => applicationUnavailableReason(vacancy, new Date(time));
+    expect(at('2026-08-01T02:59:59Z')).toMatch(/ainda não iniciou/);
+    expect(at('2026-08-01T03:00:00Z')).toBeNull();
+    expect(at('2026-08-03T02:59:59Z')).toBeNull();
+    expect(at('2026-08-03T03:00:00Z')).toMatch(/já foi encerrado/);
+    expect(applicationUnavailableReason({ status: 'ABERTA', openingDate: null, closingDate: null })).toBeNull();
+    expect(applicationUnavailableReason({ ...vacancy, status: 'ENCERRADA' })).toMatch(/não está aberta/);
   });
 
   it('valida URLs HTTP/HTTPS e formata rótulos', () => {

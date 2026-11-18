@@ -106,6 +106,27 @@ export function isValidDateRange(startDate: string, endDate: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(start) && /^\d{4}-\d{2}-\d{2}$/.test(end) && end >= start;
 }
 
+const enrollmentDateFormat = new Intl.DateTimeFormat('sv-SE', {
+  timeZone: 'America/Sao_Paulo',
+});
+
+export function applicationUnavailableReason(
+  vacancy: Pick<Vacancy, 'status' | 'openingDate' | 'closingDate'>,
+  now = new Date(),
+): string | null {
+  if (vacancy.status !== 'ABERTA') {
+    return 'Esta vaga não está aberta para candidaturas.';
+  }
+  const today = enrollmentDateFormat.format(now);
+  if (vacancy.openingDate && today < vacancy.openingDate) {
+    return 'O período de inscrições para esta vaga ainda não iniciou.';
+  }
+  if (vacancy.closingDate && today > vacancy.closingDate) {
+    return 'O período de inscrições para esta vaga já foi encerrado.';
+  }
+  return null;
+}
+
 export function formatDateBr(value: string | null): string {
   if (!value) return 'Não informada';
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());

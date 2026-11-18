@@ -5,7 +5,7 @@ import type {
   Topic,
   Vacancy,
 } from '../../features/catalog/catalog.types';
-import { formatDateBr } from '../../features/monitoring/monitoring.rules';
+import { applicationUnavailableReason, formatDateBr } from '../../features/monitoring/monitoring.rules';
 
 type Props = {
   vacancy: Vacancy;
@@ -14,7 +14,7 @@ type Props = {
 };
 
 export function VacancyDetails({ vacancy, subject, topics = [] }: Props) {
-  const isOpen = vacancy.status === 'ABERTA';
+  const unavailableReason = applicationUnavailableReason(vacancy);
 
   return (
     <article className="panel">
@@ -72,7 +72,7 @@ export function VacancyDetails({ vacancy, subject, topics = [] }: Props) {
         </dd>
       </dl>
       <div className="form-actions">
-        {isOpen && (
+        {!unavailableReason && (
           <Link
             className="primary"
             to={'/applications/new?vacancyId=' + vacancy.id}
@@ -84,9 +84,7 @@ export function VacancyDetails({ vacancy, subject, topics = [] }: Props) {
           Consultar horários de atendimento
         </Link>
       </div>
-      {!isOpen && (
-        <p className="muted">Esta vaga não está aberta para candidaturas.</p>
-      )}
+      {unavailableReason && <p className="muted">{unavailableReason}</p>}
     </article>
   );
 }

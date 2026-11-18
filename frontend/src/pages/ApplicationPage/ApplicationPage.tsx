@@ -10,8 +10,7 @@ import {
   loadVacancies,
 } from '../../features/catalog/catalog.api';
 import { loadUsers } from '../../features/monitoring/monitoring.api';
-import { VACANCY_STATUS_LABELS } from '../../features/monitoring/monitoring.rules';
-import type { VacancyStatus } from '../../features/monitoring/monitoring.types';
+import { applicationUnavailableReason } from '../../features/monitoring/monitoring.rules';
 import { useQuery } from '../../shared/useQuery';
 
 export function ApplicationPage() {
@@ -55,13 +54,17 @@ export function ApplicationPage() {
       />
       <QueryResult state={query.state} retry={query.retry}>
         {({ vacancies, subjects, students }) => {
+          const now = new Date();
           const openVacancies = vacancies.filter(
-            (vacancy) => vacancy.status === 'ABERTA',
+            (vacancy) => applicationUnavailableReason(vacancy, now) === null,
           );
           const requestedVacancy =
             requestedVacancyId === undefined
               ? undefined
               : vacancies.find((vacancy) => vacancy.id === requestedVacancyId);
+          const unavailableReason = requestedVacancy
+            ? applicationUnavailableReason(requestedVacancy, now)
+            : null;
 
           let unavailable: { title: string; description: string } | undefined;
           if (rawVacancyId !== null && requestedVacancyId === undefined) {
@@ -76,24 +79,15 @@ export function ApplicationPage() {
               description:
                 'A vaga indicada no link não existe no catálogo consultado. Escolha uma vaga aberta para continuar.',
             };
-          } else if (requestedVacancy && requestedVacancy.status !== 'ABERTA') {
-            const status =
-              VACANCY_STATUS_LABELS[requestedVacancy.status as VacancyStatus] ||
-              requestedVacancy.status;
+          } else if (unavailableReason) {
             unavailable = {
               title: 'Vaga indisponível para candidatura',
-              description:
-                'A vaga #' +
-                requestedVacancy.id +
-                ' está com status ' +
-                status +
-                '. Somente vagas com status ABERTA aceitam candidatura.',
+              description: unavailableReason,
             };
           } else if (openVacancies.length === 0) {
             unavailable = {
-              title: 'Nenhuma vaga aberta',
-              description:
-                'O catálogo não possui vagas com status ABERTA. A candidatura fica indisponível até que uma vaga aberta seja cadastrada.',
+              title: 'Nenhuma vaga com inscrições abertas',
+              description: 'O catálogo não possui vagas aceitando candidaturas no momento.',
             };
           }
 

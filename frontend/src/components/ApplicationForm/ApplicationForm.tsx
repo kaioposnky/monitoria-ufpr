@@ -4,6 +4,7 @@ import { useAuth } from '../../features/auth/AuthContext';
 import type { Subject, Vacancy } from '../../features/catalog/catalog.types';
 import { createApplication } from '../../features/monitoring/monitoring.api';
 import {
+  applicationUnavailableReason,
   formatVacancyLabel,
   isPositiveInteger,
   isScoreInRange,
@@ -76,10 +77,11 @@ export function ApplicationForm({
     const selectedVacancy = vacancies.find(
       (vacancy) => String(vacancy.id) === values.vacancyId,
     );
-    if (!values.vacancyId) {
+    if (!selectedVacancy) {
       next.vacancyId = 'Selecione uma vaga aberta.';
-    } else if (!selectedVacancy || selectedVacancy.status !== 'ABERTA') {
-      next.vacancyId = 'Selecione uma vaga com status ABERTA.';
+    } else {
+      const reason = applicationUnavailableReason(selectedVacancy);
+      if (reason) next.vacancyId = reason;
     }
     if (!isPositiveInteger(effectiveStudentId)) {
       next.studentId = 'Selecione o aluno candidato.';
@@ -154,7 +156,7 @@ export function ApplicationForm({
           hint={
             initialVacancyId
               ? 'Vaga preenchida a partir do link. Você pode trocar por outra vaga aberta.'
-              : 'Somente vagas com status ABERTA do catálogo.'
+              : 'Somente vagas com inscrições abertas.'
           }
         >
           <select
