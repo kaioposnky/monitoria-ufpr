@@ -29,6 +29,7 @@ type Props = {
   topics: Topic[];
   relations: CourseSubject[];
   onChanged: () => void;
+  setSuccessMsg: (message: string | null) => void;
 };
 
 export function AdminCatalogPanel({
@@ -38,6 +39,7 @@ export function AdminCatalogPanel({
   topics,
   relations,
   onChanged,
+  setSuccessMsg,
 }: Props) {
   const [editingCourseId, setEditingCourseId] = useState<number | null>(null);
   const [courseCode, setCourseCode] = useState('');
@@ -59,7 +61,6 @@ export function AdminCatalogPanel({
 
   const [busy, setBusy] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const courseById = new Map(courses.map((c) => [c.id, c]));
   const subjectById = new Map(subjects.map((s) => [s.id, s]));
@@ -268,11 +269,6 @@ export function AdminCatalogPanel({
       {errorMsg && (
         <p className="notice error" role="alert">
           {errorMsg}
-        </p>
-      )}
-      {successMsg && (
-        <p className="notice success" role="status">
-          {successMsg}
         </p>
       )}
 

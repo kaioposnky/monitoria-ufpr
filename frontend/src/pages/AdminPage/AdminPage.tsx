@@ -16,6 +16,7 @@ type AdminTab = 'courses' | 'subjects' | 'topics' | 'links' | 'users';
 
 export function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>('courses');
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const loadAdminData = useCallback(async (signal: AbortSignal) => {
     const [courses, subjects, topics, relations, users] = await Promise.all([
@@ -52,11 +53,17 @@ export function AdminPage() {
             role="tab"
             className="tab-button"
             aria-selected={activeTab === tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => {
+              setActiveTab(tab.id);
+              setSuccessMsg(null);
+            }}
           >
             {tab.label}
           </button>
         ))}
+      </div>
+      <div role="status">
+        {successMsg && <p className="notice success">{successMsg}</p>}
       </div>
 
       <QueryResult state={query.state} retry={query.retry}>
@@ -66,6 +73,7 @@ export function AdminPage() {
               users={users}
               courses={courses}
               onChanged={() => query.retry()}
+              setSuccessMsg={setSuccessMsg}
             />
           ) : (
             <AdminCatalogPanel
@@ -75,6 +83,7 @@ export function AdminPage() {
               topics={topics}
               relations={relations}
               onChanged={() => query.retry()}
+              setSuccessMsg={setSuccessMsg}
             />
           )
         }

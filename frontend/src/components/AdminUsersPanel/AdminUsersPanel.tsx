@@ -17,11 +17,12 @@ type Props = {
   users: UserSummary[];
   courses: Course[];
   onChanged: () => void;
+  setSuccessMsg: (message: string | null) => void;
 };
 
 const ROLES: UserRole[] = ['ALUNO', 'PROFESSOR', 'ADMIN'];
 
-export function AdminUsersPanel({ users, courses, onChanged }: Props) {
+export function AdminUsersPanel({ users, courses, onChanged, setSuccessMsg }: Props) {
   const { user: currentUser } = useAuth();
   const [editingId, setEditingId] = useState<number | null>(null);
   const [name, setName] = useState('');
@@ -34,7 +35,6 @@ export function AdminUsersPanel({ users, courses, onChanged }: Props) {
 
   const [busy, setBusy] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const courseById = new Map(courses.map((c) => [c.id, c]));
 
@@ -133,11 +133,6 @@ export function AdminUsersPanel({ users, courses, onChanged }: Props) {
       {errorMsg && (
         <p className="notice error" role="alert">
           {errorMsg}
-        </p>
-      )}
-      {successMsg && (
-        <p className="notice success" role="status">
-          {successMsg}
         </p>
       )}
 
