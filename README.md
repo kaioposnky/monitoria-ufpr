@@ -52,6 +52,8 @@ cd backend
 
 Healthcheck: `http://localhost:8080/actuator/health`.
 
+Se abrir o frontend em outro host ou porta, inclua a origem exata em `APP_CORS_ALLOWED_ORIGINS` antes de iniciar o backend. A variável substitui a lista padrão; por exemplo, `APP_CORS_ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:45173` mantém a origem local e permite a alternativa.
+
 ### Com PostgreSQL
 
 O perfil padrão espera `jdbc:postgresql://localhost:5432/monitoria_ufpr` com usuário `postgres` (ver `.env.example`). Variáveis configuráveis no ambiente:
