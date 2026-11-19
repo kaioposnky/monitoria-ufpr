@@ -2,32 +2,31 @@
 
 ## 1. Opções consideradas
 
-### Alternativa A: Monólito simples acoplado (MVC/SSR tradicional)
-Aplicação única com geração de páginas no servidor ou controllers acessando repositórios JPA diretamente, sem cache explícito nem interfaces separadas para e-mail e agenda.
+### Alternativa A: Monólito simples acoplado (MVC tradicional)
+Uma única aplicação que monta as páginas no servidor, com o código de cada tela acessando o banco diretamente, sem cache e sem separar as integrações de e-mail e agenda.
 
-### Alternativa B (Adotada): Monólito em camadas (Spring Boot) + SPA React/Vite
-Backend único separado por camadas técnicas (controller, security, service, repository, entity, dto, integration, exception, config), cache-aside via Spring Cache (simple), interfaces Notificador e ServicoAgenda para chamadas externas, e SPA consumindo /api/v1/** com JWT.
+### Alternativa B (adotada): Monólito em camadas + SPA separada
+Um único backend dividido em camadas (entrada HTTP, segurança, regras de negócio, acesso a dados e integrações), com cache em memória, interfaces Notificador e ServicoAgenda para os serviços externos e uma SPA em React que usa a API REST com login por token.
 
 ### Alternativa C: Microsserviços por domínio
-Divisão em serviços independentes (Catálogo, Candidaturas/Seleção, Atividades e Agenda/Notificações) com bancos separados, API Gateway, Redis compartilhado e mensageria entre serviços.
+Serviços independentes (catálogo, candidaturas e seleção, atividades, agenda e notificações), cada um com seu banco, mais um gateway de entrada, cache compartilhado e troca de mensagens entre os serviços.
 
 ## 2. Comparação
 
 | Critério | Alternativa A (Monólito simples) | Alternativa B (Adotada) | Alternativa C (Microsserviços) |
 | --- | --- | --- | --- |
-| Modificabilidade | Baixa: regras de negócio, HTTP e chamadas externas ficam misturados. | Boa para o porte do projeto: services isolam regras e interfaces isolam Notificador e ServicoAgenda (ASR-03). | Alta para equipes separadas; cara para grupo pequeno porque cada mudança altera contratos de rede. |
-| Desempenho | Toda consulta repetida bate no banco. | Cache-aside atende leituras repetidas de catálogo, vagas, monitores e horários em memória (ASR-01). | Adiciona latência de rede entre serviços e gateway. |
-| Disponibilidade | Falha no processo ou dependência externa trava o fluxo. | Processo único no Spring; falhas em Notificador ou ServicoAgenda são logadas por IntegracaoExecutor sem desfazer a gravação no banco. | Isola quedas por serviço, mas exige correlação de logs e coordenação entre serviços para não gerar inconsistência. |
-| Testabilidade | Difícil testar regra isolada sem banco/UI juntos. | Alta: integração com H2/MockMvc (@ActiveProfiles("dev") e "test") e unitários mockando Notificador e ServicoAgenda. | Exige subir múltiplos containers ou montar contratos simulados entre serviços. |
-| Complexidade | Mínima no começo; piora conforme crescem papéis e fluxos. | Média: dois artefatos de entrega (JAR Spring + bundle Vite) divididos por camada técnica. | Alta: service discovery, auth distribuída, deploys coordenados e consistência eventual. |
-| Implantação | Um processo apenas. | Um JAR Spring Boot + estáticos frontend/dist atrás de proxy /api. | Múltiplos containers, bancos distintos e broker. |
-| Escalabilidade | Apenas vertical. | Vertical imediata; escalar horizontalmente com réplicas exige trocar o cache simple por Redis e externalizar o mapa da agenda. | Escala por serviço, mas o volume de um setor acadêmico não exige particionamento de carga. |
-| Custo (dev e operação) | Barato no início, caro para evoluir. | Roda local só com Java 21 e Node no perfil dev (ASR-03). | Custo de infra e manutenção desproporcional à equipe. |
+| Modificabilidade | Baixa: regras de negócio, HTTP e chamadas externas ficam misturadas. | Boa para o porte do projeto: as regras ficam na camada de serviços, e as interfaces isolam notificação e agenda (ASR-03). | Alta para equipes separadas, mas cara para um grupo pequeno, porque cada mudança altera contratos de rede. |
+| Leituras repetidas (ASR-01) | A proposta não inclui cache. | As leituras mais frequentes usam cache local; depois da primeira, não vão ao banco. | A proposta inclui chamadas de rede entre serviços. Sem medição, não há comparação de tempo de resposta. |
+| Disponibilidade | Uma falha no processo ou em um serviço externo trava o fluxo. | Processo único; uma falha em notificação ou agenda é registrada no log sem desfazer a gravação no banco. | Isola quedas por serviço, mas exige acompanhar logs de vários serviços e coordená-los para não gerar dados inconsistentes. |
+| Complexidade | Mínima no começo; piora conforme crescem os papéis e os fluxos. | Média: dois projetos entregues separadamente (backend e frontend), organizados por camada. | Alta: descoberta de serviços, autenticação distribuída, implantações coordenadas e dados sincronizados com atraso. |
+| Implantação | Um único processo. | Uma aplicação backend mais os arquivos da SPA, servidos atrás do mesmo endereço. | Vários containers, bancos separados e um serviço de mensagens. |
+| Escalabilidade | Apenas vertical. | Vertical de imediato; para rodar várias cópias, é preciso um cache compartilhado (como Redis) e guardar a agenda fora da memória. | Escala por serviço, mas o volume de um setor acadêmico não exige dividir a carga. |
+| Custo (desenvolvimento e operação) | Barato no início, caro para evoluir. | Roda localmente só com Java 21 e Node (ASR-03). | Custo de infraestrutura e manutenção desproporcional ao tamanho da equipe. |
 
 ## 3. Ligação com os ASRs
 
 | ASR | Como a Alternativa B atende |
 | --- | --- |
-| ASR-01 (Leituras em memória) | Usa Spring Cache no processo Spring e não vai ao banco em leituras repetidas, sem exigir servidor Redis separado. |
-| ASR-02 (Segurança stateless) | JWT + AccessGuard centralizam a checagem de permissões em um backend único antes de servir a SPA ou outros clientes, sem sincronizar chaves entre vários serviços. |
-| ASR-03 (Simplicidade operacional) | Evita a infra da Alternativa C e evita o acoplamento direto da Alternativa A separando services e interfaces Notificador e ServicoAgenda. |
+| ASR-01 (Leituras em memória) | Usa cache na memória da própria aplicação e não vai ao banco em leituras repetidas, sem exigir um servidor de cache separado. |
+| ASR-02 (Segurança sem sessão) | O login por token e a verificação de acesso ficam em um único backend, que confere as permissões antes de responder à SPA ou a outros clientes, sem precisar repetir isso em vários serviços. |
+| ASR-03 (Simplicidade operacional) | Evita a infraestrutura da Alternativa C e o acoplamento da Alternativa A, separando as regras em camadas e as integrações atrás das interfaces Notificador e ServicoAgenda. |

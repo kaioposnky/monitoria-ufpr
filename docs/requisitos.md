@@ -1,4 +1,4 @@
-# Requisitos e Contexo
+# Requisitos e Contexto
 
 ## 1. Contexto
 
@@ -7,87 +7,83 @@ Sistema feito para as disciplinas e coordenações do Setor de Ciências Exatas 
 ## 2. Atores e sistemas externos
 
 - Aluno: consulta cursos, disciplinas, matérias, vagas e horários; envia, edita e exclui suas candidaturas.
-- Monitor (ALUNO com vínculo ATIVO na tabela monitores): mantém o que um aluno faz e também cadastra, edita ou remove seus horários de atendimento e registros de atividade.
-- Professor: cria, edita e remove suas próprias vagas; lista candidaturas, avalia status e efetiva/gerencia monitores de suas vagas; cadastra/atualiza/remove registros e aprova atividades de seus monitores.
-- Administrador: gerencia cursos, disciplinas, matérias (1:N com disciplinas), vínculos curso-disciplina (N:N) e usuários; tem permissão para operar recursos de qualquer vaga ou monitor.
-- Notificador (externo): recebe notificações ao registrar candidatura, avaliar candidatura, efetivar monitor e avaliar atividade.
-- ServicoAgenda (externo): publica datas de abertura/encerramento de vagas e horários semanais de atendimento, com exportação para .ics.
+- Monitor (aluno com vínculo ativo de monitoria): faz o mesmo que um aluno e também cadastra, edita ou remove seus horários de atendimento e registros de atividade.
+- Professor: cria, edita e remove suas próprias vagas; avalia candidaturas e efetiva monitores de suas vagas; acompanha e aprova as atividades de seus monitores.
+- Administrador: gerencia cursos, disciplinas, matérias (cada matéria pertence a uma disciplina), vínculos entre cursos e disciplinas (N:N) e usuários; pode operar recursos de qualquer vaga ou monitor.
+- Notificador (externo): recebe avisos ao registrar candidatura, avaliar candidatura, efetivar monitor e avaliar atividade.
+- Agenda (externa): publica as datas de abertura e encerramento das vagas e os horários semanais de atendimento, com exportação em arquivo de calendário (.ics).
 
 ## 3. Requisitos
 
-Os requisitos do sistema dividem-se em **requisitos funcionais** (RF01–RF08), **requisitos de qualidade** (RQ01–RQ07) e **requisitos de restrição** (RT01–RT03). Dentre esses direcionadores, três são classificados como **Requisitos Arquiteturalmente Significativos (ASRs)** por imporem decisões diretas sobre a organização em camadas, a estratégia de cache, o modelo de segurança e o isolamento de integrações externas.
+Os requisitos dividem-se em **requisitos funcionais** (RF01–RF08), **requisitos de qualidade** (RQ01–RQ07) e **requisitos de restrição** (RT01–RT03). Três deles são **Requisitos Arquiteturalmente Significativos (ASRs)**, porque determinaram decisões sobre a organização em camadas, o cache, a segurança e o isolamento das integrações externas.
 
 ### 3.1 Requisitos funcionais
 
-| ID | Requisito | Onde está no código |
-| --- | --- | --- |
-| RF01 | Consultar cursos, disciplinas, matérias, vínculos e vagas com filtro por texto, modalidade e status | CursoController, DisciplinaController, MateriaController, CursoDisciplinaController, VagaMonitoriaController (rotas GET) e VacanciesPage |
-| RF02 | Consultar grade semanal de atendimento e eventos sincronizados na agenda | GET /api/v1/horarios-atendimento/**, GET /api/v1/agenda/eventos, GET /api/v1/agenda/calendario.ics e OfficeHoursPage |
-| RF03 | Cadastrar, editar, encerrar/cancelar vagas com janela opcional de inscrição | VagaMonitoriaController + VagaMonitoriaService (valida dataEncerramento >= dataAbertura) e VacancyForm / ManagementPage |
-| RF04 | Candidatar-se a uma vaga aberta | CandidaturaController + CandidaturaService.criar (exige vaga existente, status ABERTA, data atual dentro de [dataAbertura, dataEncerramento] e ausência de inscrição duplicada) |
-| RF05 | Avaliar candidaturas e efetivar monitores dentro do limite da vaga | PATCH /api/v1/candidaturas/{id}/status + MonitorService.criar (checa countByVagaIdAndStatus(..., ATIVO) < vaga.getQuantidadeVagas()) |
-| RF06 | Gerenciar horários de atendimento semanal (SEGUNDA a SABADO) | HorarioAtendimentoController + HorarioAtendimentoService (valida horaFim > horaInicio e sincroniza com ServicoAgenda) |
-| RF07 | Lançar e aprovar registros de atividades do monitor | RegistroAtividadeController + RegistroAtividadeService (horaFim > horaInicio e PATCH /{id}/aprovacao) |
-| RF08 | Autenticar usuários e administrar catálogo acadêmico e contas | AuthController (/login, /me) + UsuarioController e endpoints de escrita em catálogo restritos a ADMIN |
+| ID | Requisito |
+| --- | --- |
+| RF01 | Consultar cursos, disciplinas, matérias, vínculos e vagas, com filtro por texto, modalidade e status |
+| RF02 | Consultar a grade semanal de atendimento e os eventos da agenda |
+| RF03 | Cadastrar, editar, encerrar e cancelar vagas, com período de inscrição opcional |
+| RF04 | Candidatar-se a uma vaga aberta, dentro do período de inscrição e uma única vez por vaga |
+| RF05 | Avaliar candidaturas e efetivar monitores dentro do limite de vagas |
+| RF06 | Gerenciar horários de atendimento semanais (segunda a sábado) |
+| RF07 | Lançar e aprovar registros de atividades do monitor |
+| RF08 | Autenticar usuários e administrar o catálogo acadêmico e as contas |
 
 ### 3.2 Requisitos de qualidade (incluindo ASRs)
 
-| ID | Atributo de qualidade | Critério / Descrição mensurável | ASR? | Onde está no código / verificação |
-| --- | --- | --- | --- | --- |
-| RQ01 | Desempenho | Leituras repetidas de catálogo, vagas, monitores e horários devem ser respondidas em memória sem nova query SQL após a primeira carga (0 chamadas aos repositórios em *cache hit*), preservando consistência após escritas válidas. | ASR-01 | CacheConfig, @Cacheable/@CacheEvict/@Caching nos services e CacheAsideIntegrationTest |
-| RQ02 | Segurança | Endpoints protegidos devem rejeitar requisições sem JWT válido (401 NAO_AUTENTICADO) ou sem permissão/posse (403 ACESSO_NEGADO), refletindo imediatamente ativações ou desligamentos em monitores sem relogin e sem estado de sessão no servidor. | ASR-02 | SecurityConfig, JwtAuthenticationFilter, AccessGuard e AuthAndRbacIntegrationTest |
-| RQ03 | Modificabilidade e Operabilidade | Trocar provedores de notificação e agenda por configuração ou novo adaptador sem alterar controllers, services ou entidades, mantendo a execução local completa restrita a Java 21 e Node. | ASR-03 | Interfaces Notificador e ServicoAgenda, @ConditionalOnProperty e perfil dev |
-| RQ04 | Disponibilidade e Tolerância a falhas | Indisponibilidades ou exceções em Notificador e ServicoAgenda não podem reverter transações acadêmicas já confirmadas no banco (degradação graciosa com log.warn), mantendo healthcheck público ativo. | Não | IntegracaoExecutor.executarSemInterromper, /actuator/health e ExternalIntegrationsTest |
-| RQ05 | Confiabilidade e Integridade de dados | Operações de escrita devem rodar em transações ACID (@Transactional), validar entrada com @Valid, devolver erros JSON padronizados (400, 404, 409) e respeitar FKs, CHECKs e unicidades do banco. | Não | GlobalExceptionHandler, entidades JPA e migrações Flyway V1–V5 |
-| RQ06 | Usabilidade e Responsividade | As telas da SPA devem operar em desktop e celular sem scroll horizontal nem perda de controles de formulário, oferecendo validação prévia de formato no cliente e exibição uniforme de mensagens de erro da API. | Não | frontend/src/styles/global.css, componentes de formulário e frontend/src/shared/api/http.ts |
-| RQ07 | Testabilidade e Interoperabilidade | As suítes automatizadas devem executar offline com H2 e adaptadores simulados; a API deve expor contrato OpenAPI atualizado e exportação de calendário no padrão RFC-5545 (.ics). | Não | OpenApiConfig (/v3/api-docs, /swagger-ui.html), AgendaIcsAdapter, MockMvc e Vitest |
+| ID | Atributo de qualidade | Critério | ASR? |
+| --- | --- | --- | --- |
+| RQ01 | Desempenho | Depois da primeira carga, leituras repetidas de catálogo, vagas, monitores e horários devem ser respondidas da memória, sem nova consulta ao banco, e continuar corretas após alterações. | ASR-01 |
+| RQ02 | Segurança | Requisições sem login válido devem ser recusadas (401), e requisições sem permissão sobre o recurso também (403). Quando um aluno vira monitor ou é desligado, a mudança vale na requisição seguinte, sem novo login e sem sessão no servidor. | ASR-02 |
+| RQ03 | Modificabilidade e operabilidade | Trocar o provedor de notificação ou de agenda por configuração ou nova implementação, sem alterar as regras de negócio, e rodar o sistema completo localmente apenas com Java 21 e Node. | ASR-03 |
+| RQ04 | Disponibilidade | Uma falha no envio de aviso ou na agenda não pode desfazer uma operação acadêmica já gravada: o erro é registrado e o sistema segue funcionando. | Não |
+| RQ05 | Integridade de dados | Alterações rodam em transações, os dados recebidos são validados, os erros têm formato padronizado (400, 404, 409) e o banco garante as ligações e regras de unicidade. | Não |
+| RQ06 | Usabilidade | As telas funcionam em computador e celular sem rolagem horizontal, validam o formato dos campos antes do envio e mostram os erros da API de forma uniforme. | Não |
+| RQ07 | Testabilidade e interoperabilidade | Os testes rodam sem internet, com banco em memória e integrações simuladas; a API publica seu contrato (OpenAPI) e exporta a agenda no formato padrão de calendário (.ics). | Não |
 
 ### 3.3 Requisitos de restrição
 
-| ID | Categoria | Restrição / Critério | | Onde está no código / arquitetura |
-| --- | --- | --- | --- | --- |
-| RT01 | Ambiente de execução e infraestrutura | Todo deploy produtivo deve ocorrer on-premise na infraestrutura da UFPR, em instância única sem nuvem pública; || application.properties, application-dev.properties, CacheConfig, NotificadorFake, AgendaSimulada e package.json (start:all) |
-| RT02 | Conformidade legal e regulatória (LGPD e soberania de dados) | Dados pessoais e acadêmicos não podem sair de servidores em território nacional, permanecendo armazenados e processados sob custódia exclusiva da UFPR (Lei nº 13.709/2018). | | PostgreSQL on-premise, BCrypt (SecurityConfig), AccessGuard|
-| RT03 | Stack tecnológica obrigatória (Java 21 + Spring Boot) | Backend desenvolvido obrigatoriamente em Java 21 com Spring Boot. Porque a linguagem de conhecimento do time que irá manter o sistema | | backend/ em java|
+| ID | Categoria | Restrição |
+| --- | --- | --- |
+| RT01 | Ambiente de execução | O sistema deve rodar em um único servidor da própria universidade, sem depender de nuvem pública ou serviços pagos, e também integralmente em uma máquina local para desenvolvimento e avaliação. |
+| RT02 | Proteção de dados (LGPD) | Dados pessoais e acadêmicos devem ficar sob controle da universidade, com acesso restrito a quem tem permissão. |
+| RT03 | Tecnologia do backend | Backend em Java 21 com Spring Boot, linguagem que a equipe conhece e que facilita a manutenção futura. |
 
 ### 3.4 Detalhamento dos ASRs
 
-#### ASR-01: Desempenho de leituras em memória para consultas repetidas
+#### ASR-01: Leituras repetidas respondidas da memória
 
-No início do período letivo, catálogo e grades acumulam leituras repetidas (cursos, disciplinas, materias, cursos-disciplinas, vagas-monitoria, horarios-atendimento e também monitores). Depois da primeira consulta por chave, as leituras seguintes devem sair da memória sem nova query SQL (0 chamadas aos repositórios em cache hit, verificado em CacheAsideIntegrationTest). Quando uma escrita (POST/PUT/PATCH/DELETE) termina sem erro, os caches afetados são limpos; falhas de validação ou regra de negócio mantêm o cache como estava.
+No início do semestre, as mesmas consultas de catálogo, vagas, monitores e horários se repetem muitas vezes. Depois da primeira consulta, as seguintes devem sair da memória, sem nova consulta ao banco; um teste automatizado confirma isso. Quando uma alteração termina com sucesso, os dados afetados são descartados da memória. Se a alteração falha, a memória continua como estava.
 
-Influência arquitetural: esse requisito determinou a adoção do padrão cache-aside com @Cacheable, @CacheEvict e @Caching do Spring Cache sobre DTOs record imutáveis (mantendo fora do cache apenas candidaturas, usuarios e registros_atividades), com provedor local em memória em vez de consultas diretas a cada requisição ou infraestrutura Redis obrigatória em servidor *on-premise* único (RT01).
+Influência arquitetural: esse requisito levou à adoção de um cache em memória dentro da própria aplicação, na estratégia cache-aside (o dado é buscado no banco na primeira vez e guardado para as próximas). Só os dados de consulta frequente usam cache. Como o sistema roda em um único servidor (RT01), não foi preciso um servidor de cache separado, como o Redis.
 
-#### ASR-02: Autenticação stateless com autorização por vínculo e posse
+#### ASR-02: Login sem sessão e permissão conferida a cada requisição
 
-Chamadas sem JWT válido retornam 401, e tokens sem permissão de papel ou sobre o recurso alvo recebem 403. Quando um aluno vira MONITOR ativo (ou é desligado) em monitores, a permissão para cadastrar horários e atividades precisa valer já na requisição seguinte, sem exigir relogin nem sessão guardada no servidor.
+Requisições sem login válido recebem 401, e requisições sem permissão sobre o recurso recebem 403. Ser monitor não é um tipo fixo de conta: um aluno vira monitor quando é efetivado e pode ser desligado no meio do semestre. Essa mudança precisa valer já na requisição seguinte, sem novo login e sem sessão guardada no servidor.
 
-Influência arquitetural: esse requisito motivou o uso de API REST stateless com JwtAuthenticationFilter combinado ao componente AccessGuard consultado via @PreAuthorize nos controllers do monólito Java/Spring (RT03). Como o vínculo ativo em monitores e a posse da vaga, candidatura, horário ou registro são avaliados por requisição contra o banco on-premise (RT02), evita-se colocar estado mutável de monitoria dentro do token JWT e impede-se qualquer bypass pela interface SPA.
+Influência arquitetural: esse requisito levou ao uso de uma API sem sessão, com token JWT que só identifica o usuário, e a uma verificação de acesso centralizada que consulta o banco a cada requisição para saber se ele é dono do recurso ou monitor ativo. Assim, a informação de monitor, que muda com o tempo, não fica presa no token, e a interface não consegue contornar as regras, porque tudo é conferido no backend.
 
-#### ASR-03: Simplicidade operacional e troca localizada de provedores para equipe pequena
+#### ASR-03: Operação simples e troca de provedores sem mexer nas regras
 
-Com equipe pequena e foco acadêmico, o ambiente completo sobe local com Java 21 e cache em memória Ao mesmo tempo, notificações e agenda precisam trocar de implementação via propriedade app.integracoes.* ou novo adaptador, sem mexer em controllers, entidades ou services.
+Com equipe pequena e foco acadêmico, o sistema completo precisa subir localmente apenas com Java 21 e Node. Ao mesmo tempo, notificações e agenda precisam poder trocar de provedor por configuração ou nova implementação, sem alterar as regras de negócio.
 
-Influência arquitetural: esse requisito guiou a escolha do monólito em camadas com SPA estática separada (descartando microsserviços e servidor SSR), o uso do Spring Cache simple em vez de Redis e o isolamento das dependências externas atrás das interfaces Notificador e ServicoAgenda.
+Influência arquitetural: esse requisito levou ao monólito em camadas com uma SPA separada (descartando microsserviços e servidor de renderização), ao cache em memória em vez de Redis e ao isolamento das dependências externas atrás das interfaces Notificador e ServicoAgenda.
 
 ### 3.5 Detalhamento e motivação dos requisitos de restrição
 
-#### RT01: Ambiente de execução e infraestrutura
+#### RT01: Ambiente de execução
 
-- **Restrição:** Todo o deploy em ambiente produtivo deve ocorrer exclusivamente na infraestrutura on-premise da UFPR (servidores locais administrados pelo Centro de Computação Eletrônica — CCE ou pela infraestrutura de TI do Setor de Ciências Exatas), em instância única com recursos computacionais restritos e sem dependência de nuvem pública ou serviços gerenciados externos. No ambiente de desenvolvimento e avaliação acadêmica, o sistema também deve executar integralmente em máquina local apenas com Java 21 Spring Boot.
-O sistema atende exclusivamente às coordenações, docentes, alunos e monitores do Setor de Ciências Exatas da UFPR, com volume concentrado nos períodos de abertura de vagas e lançamento semanal de horários e atividades. Por rodar on-premise em servidor institucional único (um artefato JAR Spring Boot + estáticos da SPA React + PostgreSQL local), evita-se a exigência de servidores separados para Redis, message brokers ou orquestradores distribuídos, reforçando os requisitos ASR-01 (cache em memória na JVM) e ASR-03 (simplicidade operacional).
-O Setor de Ciências Exatas não possui dotação orçamentária recorrente em moeda estrangeira para contratação contínua de provedores de nuvem comercial ou serviços PaaS/SaaS pagos, além de já contar com servidores próprios no Centro Politécnico e equipe reduzida de sustentação. Restringir a implantação ao parque on-premise da universidade reduz custos operacionais, elimina dependência de terceiros e garante autonomia à coordenação do setor.
+- **Restrição:** em produção, o sistema roda em um único servidor da universidade, sem nuvem pública nem serviços pagos. Em desenvolvimento e na avaliação, roda inteiro em uma máquina local.
+- **Motivação:** o sistema atende apenas o Setor de Ciências Exatas, com pouco volume de uso, concentrado na abertura de vagas e no lançamento de horários. Para esse porte, uma única aplicação com o banco é suficiente. Esta é uma premissa do projeto: assumimos que a universidade oferece servidor próprio e que não há orçamento para serviços de nuvem pagos.
+- **Efeito:** sem exigir servidores separados para cache, filas ou orquestração, a operação fica simples (ASR-03) e o cache pode ficar na memória da própria aplicação (ASR-01).
 
-#### RT02: Conformidade legal e regulatória
+#### RT02: Proteção de dados
 
-- **Restrição:** Por força da Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018) e das políticas institucionais de segurança da informação da UFPR, todos os dados pessoais e acadêmicos dos usuários não podem sair de servidores localizados em território nacional, devendo permanecer armazenados e processados sob custódia exclusiva da universidade.
-- O sistema manipula dados pessoais e acadêmicos de alunos, monitores, professores e administradores (usuarios, candidaturas, monitores e registros_atividades), incluindo nome, e-mail institucional, matrícula/GRR, credenciais protegidas por BCrypt e histórico de seleção e horas de monitoria. A retenção integral desses registros no PostgreSQL on-premise (com schema auditável via Flyway V1–V5), o controle estrito de papel e posse no AccessGuard (ASR-02) e o isolamento de Notificador e ServicoAgenda atrás de interfaces permitem usar apenas servidores institucionais (como SMTP interno da UFPR e exportação local .ics no AgendaIcsAdapter), sem enviar dados pessoais identificáveis para APIs ou nuvens estrangeiras.
-- Como instituição pública federal de ensino superior, a UFPR responde legalmente perante a ANPD, o Encarregado de Dados (DPO) institucional e órgãos de controle externo pela guarda de informações de estudantes e servidores. Impedir a saída de dados do território nacional e de servidores sob controle da universidade mitiga riscos jurídicos de transferência internacional irregular de dados, vazamentos em plataformas de terceiros e não conformidade em auditorias acadêmicas.
+- **Restrição:** o sistema guarda dados pessoais e acadêmicos (nome, e-mail institucional, matrícula, senha protegida por hash, candidaturas e horas de monitoria), que devem ficar sob controle da universidade e só ser acessados por quem tem permissão.
+- **Motivação:** a LGPD (Lei nº 13.709/2018) exige proteger dados pessoais e limitar o acesso ao necessário. Manter o banco no servidor da universidade e conferir a permissão em cada requisição (ASR-02) atende a isso. Isolar as integrações externas atrás de interfaces permite escolher provedores que respeitem essas regras antes de enviar qualquer dado para fora.
 
-#### RT03: Stack tecnológica obrigatória (Java + Spring Boot)
+#### RT03: Tecnologia do backend
 
-- **Restrição:** O backend deve ser obrigatoriamente desenvolvido em **Java 21 com Spring Boot** (utilizando Spring WebMVC, Spring Security, Spring Data JPA e Flyway sobre PostgreSQL, mantendo a interface web desacoplada em React + TypeScript).
-- Toda a regra de negócio do ciclo de monitorias (publicação de vagas, validação de janelas de inscrição, limite de vagas na efetivação de monitores, aprovação de registros de atividade, autenticação JWT e autorização contextual via AccessGuard) concentra-se no monólito em camadas com.sistema sobre Java 21 e Spring Boot 4.1.2, exposto via API REST /api/v1/** e documentado com OpenAPI.
-- A escolha é imposta tanto pela padronização tecnológica adotada pela equipe de TI da UFPR / laboratórios do Setor de Ciências Exatas — que já mantêm ambiente homologado para aplicações JVM e bancos PostgreSQL — quanto pela expertise prévia da equipe de desenvolvimento em Java e no ecossistema Spring. Isso reduz a curva de aprendizado durante o projeto e assegura que futuros bolsistas, monitores ou técnicos da universidade consigam manter, auditar e evoluir o sistema após a entrega sem depender de tecnologias exóticas ou sem suporte interno.
-
-
+- **Restrição:** o backend deve ser feito em Java 21 com Spring Boot.
+- **Motivação:** é a tecnologia que a equipe já domina, o que reduz o tempo de aprendizado e facilita que outras pessoas mantenham o sistema depois da entrega.

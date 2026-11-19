@@ -1,29 +1,29 @@
 # Arquitetura
 
-## Organização
+## 1. Organização
 
-Cliente-servidor (SPA React e API REST JSON/HTTP) + Monólito em camadas no backend (JwtAuthenticationFilter -> controller (+ AccessGuard) -> service -> repository/entity)
+Cliente-servidor: uma SPA em React roda no navegador e conversa com o backend por uma API REST (HTTP/JSON). O backend é um monólito em camadas, e cada requisição percorre as camadas na ordem: segurança (confere o token e as permissões) → entrada HTTP → regras de negócio → acesso a dados.
 
+Camadas do backend:
 
-divisão do backend:
-- controller: expõe /api/v1/**, valida entrada com @Valid e aplica @PreAuthorize 
-- security: JwtService
-- service: Concentra as lógicas de negócio. possúi transações (@Transactional), regras de negócio, anotações de cache e chamadas às portas externas.
-- dto: records de dto.request e dto.response.
-- entity e repository: entidades JPA que mapeiam o banco de dados e tem interfaces JpaRepository.
-- integration: integrações com módulos externos...
-- exception e config: traduz exceções de validação e negócio para HTTP e configurações
+- Entrada HTTP: recebe as requisições da API, valida os dados enviados e repassa a operação para as regras de negócio.
+- Segurança: identifica o usuário pelo token e confere se ele pode acessar o recurso pedido.
+- Regras de negócio: concentra as regras, as transações e o cache, e chama as integrações externas.
+- Acesso a dados: entidades que representam as tabelas e repositórios que leem e gravam no banco.
+- Objetos de transferência: definem o formato dos dados que entram e saem da API.
+- Integrações: notificações e agenda, atrás de interfaces.
+- Erros e configuração: transformam erros de validação e de negócio em respostas HTTP padronizadas e reúnem as configurações da aplicação.
 
-No frontend, app/App.tsx monta as rotas, pages/ guarda as telas, components/ agrupa os componentes reutilizaveis, features/ guarda contratos e validações.
+No frontend, as rotas ficam em um único ponto, as telas ficam separadas dos componentes reutilizáveis, e as regras de formulário e a comunicação com a API ficam em módulos próprios.
 
-## Modelagem
+## 2. Modelagem
 
 Ver [diagramas/classes.excalidraw](../diagramas/classes.excalidraw) e [MODELAGEM_BANCO.md](../MODELAGEM_BANCO.md).
 
 | Classe / Grupo | Responsabilidade |
 | --- | --- |
 | Curso, Disciplina, CursoDisciplina, Materia | Catálogo de cursos e disciplinas em associação N:N e matérias vinculadas em 1:N a cada Disciplina|
-| Usuario | Conta de acesso (ALUNO, MONITOR, PROFESSOR, ADMIN) |
+| Usuario | Conta de acesso (ALUNO, PROFESSOR, ADMIN). Ser monitor não é um tipo de conta: é um vínculo ativo em Monitor. |
 | VagaMonitoria | Oferta da vaga por disciplina/professor/semestre, tipo, capacidade, status e janela de dataAbertura e dataEncerramento|
 | Candidatura | Inscrição única de um aluno em uma vaga, notas e status de avaliação|
 | Monitor | Vínculo efetivado a partir da seleção, com carga horária, vigência e status (ATIVO, INATIVO, DESLIGADO, CONCLUIDO). |
@@ -31,7 +31,7 @@ Ver [diagramas/classes.excalidraw](../diagramas/classes.excalidraw) e [MODELAGEM
 | RegistroAtividade | Lançamento de horas e descrição do monitor, além do status de aprovação e feedback docente. |
 | AccessGuard | Avalia se o usuário autenticado é ADMIN, PROFESSOR dono da vaga, ALUNO dono da candidatura ou MONITOR com vínculo ATIVO. |
 
-# Utilização do GRASP, SOLID, coesão e acoplamento:
+## 3. Princípios de design (GRASP, SOLID, coesão e acoplamento)
 - Controller: Os controllers recebem as requisições HTTP e encaminham as operações para os serviços correspondentes, mantendo as regras de negócio e o acesso ao banco de dados fora dessa camada.
 
 - Information Expert: As entidades são responsáveis por atualizar seus próprios atributos. Já as regras que envolvem diferentes entidades ficam nos serviços.
@@ -58,7 +58,7 @@ Ver [diagramas/classes.excalidraw](../diagramas/classes.excalidraw) e [MODELAGEM
 
 - DIP (Inversão de Dependência): Além das interfaces de integração, o serviço de candidaturas recebe uma abstração de relógio para verificar os prazos de inscrição, em vez de depender diretamente do relógio do sistema operacional. Isso facilita os testes, permitindo simular datas específicas.
 
-## 3. Comunicação e contrato REST
+## 4. Comunicação e contrato REST
 
 Ver [diagramas/componentes.excalidraw](../diagramas/componentes.excalidraw), [diagramas/sequencia.excalidraw](../diagramas/sequencia.excalidraw) e [diagramas/comunicacao.excalidraw](../diagramas/comunicacao.excalidraw).
 
@@ -78,15 +78,22 @@ A comunicação entre SPA e backend é síncrona por HTTP/JSON (exceto GET /api/
 | /api/v1/agenda | GET /eventos, GET /calendario.ics | Público |
 | /api/v1/usuarios | GET, POST, PUT, PATCH, DELETE | GET lista para PROFESSOR/ADMIN; GET /{id} para próprio usuário ou PROFESSOR/ADMIN; escrita para ADMIN |
 
-## 4. Decisões 
+## 5. Decisões
 
-- Banco: PostgreSQL.. H2(está sendo utilizado só para testes. mas a decisão foi usar postgres).
-- Cache em memória: Tem ADR sobre.
-- Notificador: NotificadorFake (padrão quando app.integracoes.notificador=fake) guarda histórico em memória e loga; EmailNotificador (app.integracoes.notificador=email) valida o endereço e formata a mensagem com remetente configurável.
-- ServicoAgenda: AgendaSimulada (padrão quando app.integracoes.agenda=simulada) mantém eventos de abertura/encerramento de vagas e horários semanais em mapa concorrente.
-- Falha não bloqueante em integrações: IntegracaoExecutor.executarSemInterromper envolve as chamadas a Notificador e ServicoAgenda em try/catch. Se falhar, registra aviso no log e mantém a gravação já confirmada no banco.
+Cada decisão está registrada em um ADR, com contexto, alternativas e consequências:
 
-## 5. Futura evolução
-- 1: trocar NotificadorFake e AgendaSimulada por SMTP real e usar Google Calendar API
-- 2: adicionar um aplicativo mobile nativo
-- 3: sair de instância única para múltiplas réplicas com Redis (caso precisarmos de desempenho e/ou disponibilidade - fazer o sistema ser para mais setores)
+- [ADR-001](adr/ADR-001.md): monólito em camadas no backend.
+- [ADR-002](adr/ADR-002.md): PostgreSQL com migrações versionadas; banco em memória (H2) só para desenvolvimento e testes.
+- [ADR-003](adr/ADR-003.md): login com token JWT e verificação de acesso a cada requisição.
+- [ADR-004](adr/ADR-004.md): notificações e agenda atrás de interfaces, com falha que não desfaz a gravação. Hoje nenhum provedor real está conectado: o envio de e-mail é registrado no log, e a agenda pode ser exportada em arquivo .ics.
+- [ADR-005](adr/ADR-005.md): cache em memória para leituras repetidas.
+- [ADR-006](adr/ADR-006.md): frontend (SPA) separado do backend.
+- [ADR-007](adr/ADR-007.md): comunicação por API REST com contrato documentado.
+
+## 6. Futura evolução
+
+| Mudança | Como a arquitetura ajuda | O que ainda custa |
+| --- | --- | --- |
+| Enviar e-mails de verdade e usar uma agenda externa (por exemplo, Google Calendar) | As regras de negócio dependem só das interfaces de notificação e agenda. Basta criar uma nova implementação e trocar a configuração ([ADR-004](adr/ADR-004.md)). | Hoje uma falha só é registrada no log. Para garantir a entrega, seria preciso guardar os envios pendentes e tentar de novo. |
+| Criar um aplicativo mobile | Todas as regras e permissões estão no backend e disponíveis pela API REST com token ([ADR-006](adr/ADR-006.md), [ADR-007](adr/ADR-007.md)). O aplicativo seria só mais um cliente. | Não há renovação de token: com 8 horas de validade, o usuário precisaria entrar de novo com frequência. |
+| Atender mais setores, com várias cópias do backend | As camadas e a API não mudam. A troca do cache em memória por um cache compartilhado (como Redis) fica em um único lugar ([ADR-005](adr/ADR-005.md)). | Hoje o cache e a agenda ficam na memória de cada cópia. É preciso compartilhá-los e operar mais infraestrutura. |
