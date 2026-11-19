@@ -81,3 +81,7 @@ npm run build
 npm test
 npm run lint
 ```
+
+## Uso de inteligência artificial
+
+O projeto utilizou assistentes de IA como apoio à codificação, revisão, testes e documentação, incluindo o GitHub Copilot em parte dos commits. O conteúdo gerado foi revisado pelos integrantes do grupo, que mantêm a responsabilidade pelas decisões técnicas, pelo código e pela documentação entregues.
